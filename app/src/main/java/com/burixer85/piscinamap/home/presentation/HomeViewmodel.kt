@@ -28,47 +28,24 @@ class HomeViewModel @Inject constructor(
 
     fun fetchPools(latitude: Double, longitude: Double) {
         viewModelScope.launch {
-            try {
-                Log.d("DEBUG_PISCINA", "1. Iniciando carga en Sevilla...")
-                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-                delay(1500)
+            val result = getNearbyPoolsUseCase(latitude, longitude)
 
-                val mockPools = listOf(
-                    Pool(
-                        id = "sev1",
-                        name = "Centro Deportivo San Pablo",
-                        latitude = 37.3970,
-                        longitude = -5.9688,
-                        address = "Av. de Kansas City, s/n, 41007 Sevilla",
-                        rating = 4.2f,
-                        isOpenNow = true,
-                        photoUrl = null
-                    ),
-                    Pool(
-                        id = "sev2",
-                        name = "Piscina Municipal Tiro de Línea",
-                        latitude = 37.3698,
-                        longitude = -5.9772,
-                        address = "Calle Lora del Río, s/n, 41013 Sevilla",
-                        rating = 4.0f,
-                        isOpenNow = false,
-                        photoUrl = null
-                    )
-                )
-
-                Log.d("DEBUG_PISCINA", "2. Piscinas de Sevilla creadas")
-
-                _uiState.update {
-                    it.copy(pools = mockPools)
+            result.fold(
+                onSuccess = { poolsList ->
+                    Log.d("DEBUG_MAPA", "Enviando ${poolsList.size} piscinas a la UI")
+                    _uiState.update { it.copy(pools = poolsList, isLoading = false) }
+                },
+                onFailure = { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Error al cargar piscinas"
+                        )
+                    }
                 }
-
-            } catch (e: Exception) {
-                Log.e("DEBUG_PISCINA", "Error: ${e.message}")
-            } finally {
-                Log.d("DEBUG_PISCINA", "3. Cargador apagado")
-                _uiState.update { it.copy(isLoading = false) }
-            }
+            )
         }
     }
 

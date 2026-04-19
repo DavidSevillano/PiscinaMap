@@ -8,6 +8,6 @@ class GetNearbyPoolsUseCase @Inject constructor(
     private val repository: PoolRepository
 ) {
     suspend operator fun invoke(lat: Double, lng: Double): Result<List<Pool>> {
-        return repository.searchNearbyPools(lat, lng, 5000)
+        return repository.searchNearbyPools(lat, lng, 15000)
     }
 }

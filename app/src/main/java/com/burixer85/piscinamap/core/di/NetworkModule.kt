@@ -20,9 +20,15 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGoogleApi(): GooglePlacesApi {
+        val json = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+            isLenient = true
+        }
+
         return Retrofit.Builder()
             .baseUrl("https://maps.googleapis.com/")
-            .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(GooglePlacesApi::class.java)
     }

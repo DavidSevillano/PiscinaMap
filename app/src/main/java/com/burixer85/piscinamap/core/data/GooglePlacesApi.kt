@@ -9,7 +9,7 @@ interface GooglePlacesApi {
     suspend fun getNearbyPools(
         @Query("location") location: String,
         @Query("radius") radius: Int,
-        @Query("type") type: String = "swimming_pool",
+        @Query("keyword") keyword: String = "swimming_pool",
         @Query("key") apiKey: String
     ): PlacesResponse
 }
