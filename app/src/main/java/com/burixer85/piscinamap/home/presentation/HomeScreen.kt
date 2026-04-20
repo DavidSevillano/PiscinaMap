@@ -1,13 +1,18 @@
 package com.burixer85.piscinamap.home.presentation
 
 import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -17,8 +22,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,7 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
@@ -123,33 +133,62 @@ fun HomeScreen(
                 }
             }
 
-            Column(
-                modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(16.dp)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 8.dp
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = uiState.searchText,
-                            onValueChange = { viewModel.onSearchTextChange(it) },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Buscar piscinas o zonas...") },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true
+                        Image(
+                            painter = painterResource(id = R.drawable.poolmark),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "PiscinaMap",
+                            style = androidx.compose.ui.text.TextStyle(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontSize = 22.sp,
+                                color = Color(0xFF1A2F4F)
+                            )
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = uiState.searchText,
+                        onValueChange = { viewModel.onSearchTextChange(it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Buscar piscinas o zonas...", color = Color.Gray) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF7F8FA),
+                            unfocusedContainerColor = Color(0xFFF7F8FA),
+                            disabledContainerColor = Color(0xFFF7F8FA),
+                            focusedBorderColor = Color(0xFFE0E6ED),
+                            unfocusedBorderColor = Color(0xFFE0E6ED),
+                            disabledBorderColor = Color(0xFFE0E6ED),
+                            focusedTextColor = Color(0xFF1D293F),
+                            unfocusedTextColor = Color(0xFF1D293F),
+                            cursorColor = Color(0xFF1A2F4F)
+                        )
+                    )
                 }
             }
 
