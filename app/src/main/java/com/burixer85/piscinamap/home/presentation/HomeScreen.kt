@@ -1,6 +1,12 @@
 package com.burixer85.piscinamap.home.presentation
 
+import android.os.Build
 import android.util.Log
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +22,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,14 +68,22 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
-){
+) {
     val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var poolIcon by remember { mutableStateOf<BitmapDescriptor?>(null) }
+    val showSearchButton by viewModel.showSearchButton.collectAsStateWithLifecycle()
+    val searchTriggeredManually by viewModel.searchTriggeredManually.collectAsStateWithLifecycle()
+
+    var lastPoolCount by remember { mutableStateOf(0) }
+
+    var poolIconNormal by remember { mutableStateOf<BitmapDescriptor?>(null) }
+    var poolIconHighlighted by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
     val locationPermissionState = rememberPermissionState(
         android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -76,22 +93,33 @@ fun HomeScreen(
 
     val properties = remember(locationPermissionState.status.isGranted) {
         MapProperties(
-            mapStyleOptions = MapStyleOptions("""[
+            mapStyleOptions = MapStyleOptions(
+                """[
                 { "featureType": "poi", "elementType": "labels", "stylers": [{ "visibility": "off" }] },
                 { "featureType": "transit", "elementType": "labels", "stylers": [{ "visibility": "off" }] }
-            ]"""),
+            ]"""
+            ),
             isMyLocationEnabled = locationPermissionState.status.isGranted
         )
     }
 
     LaunchedEffect(locationPermissionState.status.isGranted) {
-        if (poolIcon == null) {
-            poolIcon = bitmapDescriptorFromVector(context, R.drawable.poolmark, size = 150)
+        if (poolIconNormal == null) {
+            poolIconNormal = bitmapDescriptorFromVector(
+                context,
+                R.drawable.poolmark,
+                size = 150
+            )
+
+            poolIconHighlighted = bitmapDescriptorFromVector(
+                context,
+                R.drawable.highlighted_poolmark,
+                size = 175,
+            )
         }
 
         if (locationPermissionState.status.isGranted) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let {
@@ -101,17 +129,48 @@ fun HomeScreen(
                     }
                 }
             } catch (e: SecurityException) {
-                Log.e("MAP_ERROR", "No se pudo obtener la ubicación: ${e.message}")
+                Log.e("MAP_ERROR", "Error de ubicación: ${e.message}")
             }
         } else {
             locationPermissionState.launchPermissionRequest()
         }
     }
 
+    LaunchedEffect(cameraPositionState.isMoving, cameraPositionState.position.target) {
+        viewModel.onMapMoved(cameraPositionState.position.target, cameraPositionState.isMoving)
+    }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            val currentCount = uiState.pools.size
+
+            if (searchTriggeredManually) {
+                if (currentCount > lastPoolCount) {
+                    val added = currentCount - lastPoolCount
+
+                    val message = if (added == 1) {
+                        "¡Se ha encontrado 1 nueva piscina!"
+                    } else {
+                        "¡Se han encontrado $added nuevas piscinas!"
+                    }
+
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "No hay nuevas piscinas en esta zona", Toast.LENGTH_SHORT).show()
+                }
+                viewModel.clearManualSearchFlag()
+            }
+
+            lastPoolCount = currentCount
+        }
+    }
+
     Scaffold(
         bottomBar = { PiscinaMapBottomBar() }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+        Box(modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()) {
 
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
@@ -120,13 +179,13 @@ fun HomeScreen(
             ) {
                 uiState.pools.forEach { pool ->
                     Marker(
-                        state = MarkerState(
-                            position = LatLng(pool.latitude, pool.longitude)
-                        ),
+                        state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
                         title = pool.name,
-                        icon = poolIcon,
+                        icon = if (pool.isNew) poolIconHighlighted else poolIconNormal,
                         snippet = "Valoración: ${pool.rating ?: "N/A"}",
-                        onClick = {
+                        onClick = { marker ->
+                            viewModel.onMarkerClicked(pool.id)
+                            marker.showInfoWindow()
                             false
                         }
                     )
@@ -158,7 +217,7 @@ fun HomeScreen(
                         Text(
                             text = "PiscinaMap",
                             style = androidx.compose.ui.text.TextStyle(
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp,
                                 color = Color(0xFF1A2F4F)
                             )
@@ -192,15 +251,42 @@ fun HomeScreen(
                 }
             }
 
+            AnimatedVisibility(
+                visible = showSearchButton,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 180.dp),
+                enter = fadeIn(), exit = fadeOut()
+            ) {
+                Button(
+                    onClick = {
+                        val center = cameraPositionState.position.target
+                        viewModel.fetchPools(center.latitude, center.longitude, isManual = true)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF1A2F4F)
+                    ),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = ButtonDefaults.buttonElevation(6.dp)
+                ) {
+                    Icon(Icons.Default.Refresh, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Buscar en esta zona", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
 
             uiState.errorMessage?.let { error ->
                 Text(
                     text = error,
                     color = Color.Red,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
                 )
             }
         }

@@ -144,4 +144,5 @@ dependencies {
     implementation(libs.google.android.material)
     implementation(libs.google.accompanist.permissions)
     implementation(libs.google.android.gms.play.services.location)
+    implementation(libs.androidx.compose.material.icons.extended)
 }

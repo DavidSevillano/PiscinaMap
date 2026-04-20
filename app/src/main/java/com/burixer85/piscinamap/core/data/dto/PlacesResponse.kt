@@ -53,6 +53,7 @@ fun PlaceDto.toDomain(): Pool {
         address = this.address ?: "",
         rating = this.rating,
         isOpenNow = this.openingHours?.openNow,
-        photoUrl = this.photos?.firstOrNull()?.photoReference
+        photoUrl = this.photos?.firstOrNull()?.photoReference,
+        isNew = false
     )
 }

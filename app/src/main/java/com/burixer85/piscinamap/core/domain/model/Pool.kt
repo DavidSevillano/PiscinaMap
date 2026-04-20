@@ -8,5 +8,6 @@ data class Pool(
     val address: String,
     val rating: Float?,
     val isOpenNow: Boolean?,
-    val photoUrl: String?
+    val photoUrl: String?,
+    val isNew: Boolean = false
 )
