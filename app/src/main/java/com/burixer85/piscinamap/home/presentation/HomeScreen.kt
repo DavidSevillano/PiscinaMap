@@ -35,6 +35,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.presentation.components.PiscinaMapBottomBar
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -45,41 +49,53 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ){
     val context = LocalContext.current
-
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var poolIcon by remember { mutableStateOf<BitmapDescriptor?>(null) }
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_FINE_LOCATION
+    )
 
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(37.3891, -5.9845), 14f)
+    val cameraPositionState = rememberCameraPositionState()
+
+    val properties = remember(locationPermissionState.status.isGranted) {
+        MapProperties(
+            mapStyleOptions = MapStyleOptions("""[
+                { "featureType": "poi", "elementType": "labels", "stylers": [{ "visibility": "off" }] },
+                { "featureType": "transit", "elementType": "labels", "stylers": [{ "visibility": "off" }] }
+            ]"""),
+            isMyLocationEnabled = locationPermissionState.status.isGranted
+        )
     }
 
-    val mapStyleOptions = remember {
-        MapStyleOptions("""
-            [
-              { "featureType": "poi", "elementType": "labels", "stylers": [{ "visibility": "off" }] },
-              { "featureType": "transit", "elementType": "labels", "stylers": [{ "visibility": "off" }] }
-            ]
-        """.trimIndent())
-    }
-
-    val properties by remember {
-        mutableStateOf(MapProperties(mapStyleOptions = mapStyleOptions))
-    }
-
-    LaunchedEffect(Unit) {
-        try {
+    LaunchedEffect(locationPermissionState.status.isGranted) {
+        if (poolIcon == null) {
             poolIcon = bitmapDescriptorFromVector(context, R.drawable.poolmark, size = 150)
-        } catch (e: Exception) {
-            Log.e("MAP_ERROR", "Error cargando el icono: ${e.message}")
         }
-        viewModel.fetchPools(37.3891, -5.9845)
+
+        if (locationPermissionState.status.isGranted) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    location?.let {
+                        val userLatLng = LatLng(it.latitude, it.longitude)
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                        viewModel.fetchPools(it.latitude, it.longitude)
+                    }
+                }
+            } catch (e: SecurityException) {
+                Log.e("MAP_ERROR", "No se pudo obtener la ubicación: ${e.message}")
+            }
+        } else {
+            locationPermissionState.launchPermissionRequest()
+        }
     }
 
     Scaffold(

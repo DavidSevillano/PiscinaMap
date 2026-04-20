@@ -140,6 +140,8 @@ dependencies {
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
 
-    // xml
-    implementation("com.google.android.material:material:1.12.0")
+    // UI Components
+    implementation(libs.google.android.material)
+    implementation(libs.google.accompanist.permissions)
+    implementation(libs.google.android.gms.play.services.location)
 }
