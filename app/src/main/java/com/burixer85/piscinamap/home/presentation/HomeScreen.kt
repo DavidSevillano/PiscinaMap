@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -46,7 +48,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,6 +62,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -154,7 +159,7 @@ fun HomeScreen(
                         "¡Se han encontrado $added nuevas piscinas!"
                     }
 
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(context, "No hay nuevas piscinas en esta zona", Toast.LENGTH_SHORT).show()
                 }
@@ -162,6 +167,16 @@ fun HomeScreen(
             }
 
             lastPoolCount = currentCount
+        }
+    }
+
+    LaunchedEffect(uiState.searchLocationResult) {
+        uiState.searchLocationResult?.let { latLng ->
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                durationMs = 1000
+            )
+            viewModel.onSearchLocationProcessed()
         }
     }
 
@@ -216,7 +231,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "PiscinaMap",
-                            style = androidx.compose.ui.text.TextStyle(
+                            style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp,
                                 color = Color(0xFF1A2F4F)
@@ -234,6 +249,14 @@ fun HomeScreen(
                         leadingIcon = {
                             Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
                         },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                viewModel.performSearch(context)
+                            }
+                        ),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(

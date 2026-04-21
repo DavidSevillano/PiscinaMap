@@ -1,5 +1,7 @@
 package com.burixer85.piscinamap.home.presentation
 
+import android.content.Context
+import android.location.Geocoder
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -11,12 +13,14 @@ import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,16 +39,6 @@ class HomeViewModel @Inject constructor(
 
     private var lastSearchLocation: LatLng? = null
 
-    private fun calculateDistance(loc1: LatLng, loc2: LatLng): Float {
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            loc1.latitude, loc1.longitude,
-            loc2.latitude, loc2.longitude,
-            results
-        )
-        return results[0]
-    }
-
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
         val lastLocation = lastSearchLocation
 
@@ -54,7 +48,7 @@ class HomeViewModel @Inject constructor(
         }
 
         val results = FloatArray(1)
-        android.location.Location.distanceBetween(
+        Location.distanceBetween(
             lastLocation.latitude, lastLocation.longitude,
             currentCenter.latitude, currentCenter.longitude,
             results
@@ -105,6 +99,42 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun performSearch(context: Context) {
+        val query = _uiState.value.searchText
+        if (query.isBlank()) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val geocoder = Geocoder(context)
+            try {
+                val addresses = geocoder.getFromLocationName(query, 1)
+
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0]
+                    val targetLatLng = LatLng(address.latitude, address.longitude)
+
+                    withContext(Dispatchers.Main) {
+                        _uiState.update { it.copy(searchLocationResult = targetLatLng) }
+
+                        fetchPools(targetLatLng.latitude, targetLatLng.longitude, isManual = true)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        _uiState.update { it.copy(errorMessage = "No se encontró la ubicación") }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("SEARCH_ERROR", "Error al buscar: ${e.message}")
+                    _uiState.update { it.copy(errorMessage = "Error en el servicio de búsqueda") }
+                }
+            }
+        }
+    }
+
+    fun onSearchLocationProcessed() {
+        _uiState.update { it.copy(searchLocationResult = null) }
+    }
+
     fun onMarkerClicked(poolId: String) {
         _uiState.update { currentState ->
             val updatedPools = currentState.pools.map { pool ->
@@ -122,16 +152,8 @@ class HomeViewModel @Inject constructor(
         _searchTriggeredManually.value = false
     }
 
-    fun updateLocation(location: LatLng) {
-        _uiState.update { it.copy(userLocation = location) }
-    }
-
     fun onSearchTextChange(newText: String) {
         _uiState.update { it.copy(searchText = newText) }
-    }
-
-    fun onRetry(lat: Double, lng: Double) {
-        fetchPools(lat, lng)
     }
 }
 
@@ -140,5 +162,6 @@ data class MapUiState(
     val pools: List<Pool> = emptyList(),
     val userLocation: LatLng? = null,
     val searchText: String = "",
+    val searchLocationResult: LatLng? = null,
     val errorMessage: String? = null
 )
