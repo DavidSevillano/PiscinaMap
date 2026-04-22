@@ -37,6 +37,8 @@ okhttp-logging-interceptor = "4.12.0"
 material = "1.12.0"
 accompanist-permissions = "0.34.0"
 material-icons-extended = "1.6.0"
+places = "3.3.0"
+androidxFoundation = "1.10.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -90,6 +92,8 @@ jetbrains-kotlinx-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx"
 squareup-okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp-logging-interceptor" }
 google-android-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 google-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist-permissions" }
+google-android-libraries-places = { group = "com.google.android.libraries.places", name = "places", version.ref = "places" }
+foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "androidxFoundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

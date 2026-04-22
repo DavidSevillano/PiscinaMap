@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.burixer85.piscinamap"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.runtime)
+    implementation(libs.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -145,4 +146,7 @@ dependencies {
     implementation(libs.google.accompanist.permissions)
     implementation(libs.google.android.gms.play.services.location)
     implementation(libs.androidx.compose.material.icons.extended)
+
+    // Google Places
+    implementation(libs.google.android.libraries.places)
 }

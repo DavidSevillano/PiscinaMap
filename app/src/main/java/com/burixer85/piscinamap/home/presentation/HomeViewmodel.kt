@@ -12,6 +12,12 @@ import androidx.lifecycle.viewModelScope
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -38,6 +44,8 @@ class HomeViewModel @Inject constructor(
     val searchTriggeredManually = _searchTriggeredManually.asStateFlow()
 
     private var lastSearchLocation: LatLng? = null
+
+    private var sessionToken: AutocompleteSessionToken? = null
 
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
         val lastLocation = lastSearchLocation
@@ -99,36 +107,57 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun performSearch(context: Context) {
-        val query = _uiState.value.searchText
-        if (query.isBlank()) return
+    fun onPredictionSelected(prediction: AutocompletePrediction, context: Context) {
+        val placesClient = Places.createClient(context)
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val geocoder = Geocoder(context)
-            try {
-                val addresses = geocoder.getFromLocationName(query, 1)
+        val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
 
-                if (!addresses.isNullOrEmpty()) {
-                    val address = addresses[0]
-                    val targetLatLng = LatLng(address.latitude, address.longitude)
+        val request = FetchPlaceRequest.builder(prediction.placeId, placeFields)
+            .setSessionToken(sessionToken)
+            .build()
 
-                    withContext(Dispatchers.Main) {
-                        _uiState.update { it.copy(searchLocationResult = targetLatLng) }
+        placesClient.fetchPlace(request)
+            .addOnSuccessListener { response ->
+                val place = response.place
+                place.latLng?.let { latLng ->
+                    sessionToken = null
 
-                        fetchPools(targetLatLng.latitude, targetLatLng.longitude, isManual = true)
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        _uiState.update { it.copy(errorMessage = "No se encontró la ubicación") }
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("SEARCH_ERROR", "Error al buscar: ${e.message}")
-                    _uiState.update { it.copy(errorMessage = "Error en el servicio de búsqueda") }
+                    _uiState.update { it.copy(
+                        searchText = place.name ?: "",
+                        predictions = emptyList(),
+                        searchLocationResult = latLng
+                    )}
+
+                    fetchPools(latLng.latitude, latLng.longitude, isManual = true)
                 }
             }
+            .addOnFailureListener { e ->
+                Log.e("PLACES", "Error al obtener detalles del lugar: ${e.message}")
+                _uiState.update { it.copy(errorMessage = "No se pudieron obtener los detalles del lugar") }
+            }
+    }
+
+    fun onSearchTextChange(newText: String, context: Context) {
+        _uiState.update { it.copy(searchText = newText) }
+
+        if (newText.isBlank() || newText.length < 3) {
+            _uiState.update { it.copy(predictions = emptyList()) }
+            return
         }
+
+        if (sessionToken == null) sessionToken = AutocompleteSessionToken.newInstance()
+
+        val placesClient = Places.createClient(context)
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setSessionToken(sessionToken)
+            .setQuery(newText)
+            .build()
+
+        placesClient.findAutocompletePredictions(request)
+            .addOnSuccessListener { response ->
+                _uiState.update { it.copy(predictions = response.autocompletePredictions) }
+            }
+            .addOnFailureListener { e -> Log.e("PLACES", "Error: ${e.message}") }
     }
 
     fun onSearchLocationProcessed() {
@@ -152,8 +181,8 @@ class HomeViewModel @Inject constructor(
         _searchTriggeredManually.value = false
     }
 
-    fun onSearchTextChange(newText: String) {
-        _uiState.update { it.copy(searchText = newText) }
+    fun clearPredictions() {
+        _uiState.update { it.copy(predictions = emptyList()) }
     }
 }
 
@@ -163,5 +192,6 @@ data class MapUiState(
     val userLocation: LatLng? = null,
     val searchText: String = "",
     val searchLocationResult: LatLng? = null,
+    val predictions: List<AutocompletePrediction> = emptyList(),
     val errorMessage: String? = null
 )
