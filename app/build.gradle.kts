@@ -80,6 +80,7 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.runtime)
     implementation(libs.foundation)
+    implementation(libs.androidx.compose.animation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -149,4 +150,9 @@ dependencies {
 
     // Google Places
     implementation(libs.google.android.libraries.places)
+
+    // Coil
+    implementation(libs.coil.compose)
 }
+
+

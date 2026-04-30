@@ -5,8 +5,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +34,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,8 +56,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -64,7 +70,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.components.PiscinaMapBottomBar
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -79,6 +88,7 @@ import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
@@ -94,6 +104,9 @@ fun HomeScreen(
     val searchTriggeredManually by viewModel.searchTriggeredManually.collectAsStateWithLifecycle()
 
     var lastPoolCount by remember { mutableStateOf(0) }
+
+    var selectedPool by remember { mutableStateOf<Pool?>(null) }
+    var lastSelectedPool by remember { mutableStateOf<Pool?>(null) }
 
     var poolIconNormal by remember { mutableStateOf<BitmapDescriptor?>(null) }
     var poolIconHighlighted by remember { mutableStateOf<BitmapDescriptor?>(null) }
@@ -118,6 +131,12 @@ fun HomeScreen(
         )
     }
 
+    LaunchedEffect(selectedPool) {
+        if (selectedPool != null) {
+            lastSelectedPool = selectedPool
+        }
+    }
+
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (poolIconNormal == null) {
             poolIconNormal = bitmapDescriptorFromVector(
@@ -139,7 +158,8 @@ fun HomeScreen(
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let {
                         val userLatLng = LatLng(it.latitude, it.longitude)
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                        cameraPositionState.position =
+                            CameraPosition.fromLatLngZoom(userLatLng, 15f)
                         viewModel.fetchPools(it.latitude, it.longitude)
                     }
                 }
@@ -171,7 +191,11 @@ fun HomeScreen(
 
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(context, "No hay nuevas piscinas en esta zona", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "No hay nuevas piscinas en esta zona",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 viewModel.clearManualSearchFlag()
             }
@@ -193,30 +217,33 @@ fun HomeScreen(
     Scaffold(
         bottomBar = { PiscinaMapBottomBar() }
     ) { paddingValues ->
-        Box(modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
 
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 properties = properties,
                 cameraPositionState = cameraPositionState,
+                onMapClick = {
+                    selectedPool = null
+                    focusManager.clearFocus()
+                }
             ) {
                 uiState.pools.forEach { pool ->
                     Marker(
                         state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
-                        title = pool.name,
                         icon = if (pool.isNew) poolIconHighlighted else poolIconNormal,
-                        snippet = "Valoración: ${pool.rating ?: "N/A"}",
-                        onClick = { marker ->
+                        onClick = {
+                            selectedPool = pool
                             viewModel.onMarkerClicked(pool.id)
-                            marker.showInfoWindow()
-                            false
+                            true
                         }
                     )
                 }
             }
-
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.White,
@@ -254,7 +281,8 @@ fun HomeScreen(
                     OutlinedTextField(
                         value = uiState.searchText,
                         onValueChange = { viewModel.onSearchTextChange(it, context) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .onFocusChanged { focusState ->
 
                                 if (!focusState.isFocused) {
@@ -271,7 +299,11 @@ fun HomeScreen(
                                     viewModel.onSearchTextChange("", context)
                                     focusManager.clearFocus()
                                 }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Borrar", tint = Color.Gray)
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Borrar",
+                                        tint = Color.Gray
+                                    )
                                 }
                             }
                         },
@@ -329,6 +361,59 @@ fun HomeScreen(
                     }
                 }
             }
+
+            AnimatedVisibility(
+                visible = selectedPool != null,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                lastSelectedPool?.let { pool ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(110.dp)
+                            .clickable(enabled = false) { },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (!pool.photoUrl.isNullOrEmpty()) {
+                                val fullPhotoUrl = "https://maps.googleapis.com/maps/api/place/photo" +
+                                        "?maxwidth=400&photo_reference=${pool.photoUrl}" +
+                                        "&key=${BuildConfig.GOOGLEMAPS_KEY}"
+
+                                AsyncImage(
+                                    model = fullPhotoUrl,
+                                    contentDescription = pool.name,
+                                    modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(pool.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF1A2F4F))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Star, null, tint = Color(0xFFFFB400), modifier = Modifier.size(16.dp))
+                                    Text(" ${pool.rating ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                }
+                            }
+
+                            IconButton(onClick = { selectedPool = null }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                            }
+                        }
+                    }
+                }
+            }
+
 
             AnimatedVisibility(
                 visible = showSearchButton,
