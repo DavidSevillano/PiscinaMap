@@ -24,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,11 +38,8 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MapUiState(isLoading = true))
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
-    private val _showSearchButton = MutableStateFlow(false)
-    val showSearchButton = _showSearchButton.asStateFlow()
-
-    private val _searchTriggeredManually = MutableStateFlow(false)
-    val searchTriggeredManually = _searchTriggeredManually.asStateFlow()
+    private val _events = kotlinx.coroutines.channels.Channel<HomeEvent>()
+    val events = _events.receiveAsFlow()
 
     private var lastSearchLocation: LatLng? = null
 
@@ -51,7 +49,9 @@ class HomeViewModel @Inject constructor(
         val lastLocation = lastSearchLocation
 
         if (isCameraMoving || lastLocation == null) {
-            _showSearchButton.value = false
+            if (_uiState.value.showSearchButton) {
+                _uiState.update { it.copy(showSearchButton = false) }
+            }
             return
         }
 
@@ -62,46 +62,54 @@ class HomeViewModel @Inject constructor(
             results
         )
 
-        _showSearchButton.value = results[0] > 1500
+        val shouldShow = results[0] > 1500
+        if (_uiState.value.showSearchButton != shouldShow) {
+            _uiState.update { it.copy(showSearchButton = shouldShow) }
+        }
     }
 
     fun fetchPools(latitude: Double, longitude: Double, isManual: Boolean = false) {
         val newLocation = LatLng(latitude, longitude)
 
-        if (isManual) {
-            _searchTriggeredManually.value = true
-        }
-
-        _showSearchButton.value = false
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, showSearchButton = false) }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
             val result = getNearbyPoolsUseCase(latitude, longitude)
 
             result.fold(
                 onSuccess = { incomingPools ->
+                    val currentPoolIds = _uiState.value.pools.map { it.id }.toSet()
+
+                    val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
+
+                    if (isManual) {
+                        val message = if (realNewPools.isNotEmpty()) {
+                            "¡Se han encontrado ${realNewPools.size} nuevas piscinas!"
+                        } else {
+                            "No hay piscinas nuevas en esta zona"
+                        }
+                        _events.send(HomeEvent.ShowToast(message))
+                    }
+
                     lastSearchLocation = newLocation
 
                     _uiState.update { currentState ->
                         val finalPools = if (isManual) {
+                            // Marcamos como "viejas" las que ya teníamos
                             val oldPools = currentState.pools.map { it.copy(isNew = false) }
-                            val newPools = incomingPools.map { it.copy(isNew = true) }
+                            // Marcamos como "nuevas" solo las que realmente no conocíamos
+                            val newPools = incomingPools.map { pool ->
+                                pool.copy(isNew = pool.id !in currentPoolIds)
+                            }
                             (oldPools + newPools).distinctBy { it.id }
                         } else {
                             incomingPools.map { it.copy(isNew = false) }
                         }
-
-                        currentState.copy(
-                            pools = finalPools,
-                            isLoading = false
-                        )
+                        currentState.copy(pools = finalPools, isLoading = false)
                     }
                 },
                 onFailure = { error ->
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.message ?: "Error desconocido")
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 }
             )
         }
@@ -109,32 +117,22 @@ class HomeViewModel @Inject constructor(
 
     fun onPredictionSelected(prediction: AutocompletePrediction, context: Context) {
         val placesClient = Places.createClient(context)
-
-        val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
-
+        val placeFields = listOf(Place.Field.NAME, Place.Field.LAT_LNG)
         val request = FetchPlaceRequest.builder(prediction.placeId, placeFields)
             .setSessionToken(sessionToken)
             .build()
 
-        placesClient.fetchPlace(request)
-            .addOnSuccessListener { response ->
-                val place = response.place
-                place.latLng?.let { latLng ->
-                    sessionToken = null
+        placesClient.fetchPlace(request).addOnSuccessListener { response ->
+            response.place.latLng?.let { latLng ->
+                sessionToken = null
+                _uiState.update { it.copy(searchText = response.place.name ?: "", predictions = emptyList()) }
 
-                    _uiState.update { it.copy(
-                        searchText = place.name ?: "",
-                        predictions = emptyList(),
-                        searchLocationResult = latLng
-                    )}
-
-                    fetchPools(latLng.latitude, latLng.longitude, isManual = true)
+                viewModelScope.launch {
+                    _events.send(HomeEvent.AnimateToLocation(latLng))
                 }
+                fetchPools(latLng.latitude, latLng.longitude, isManual = true)
             }
-            .addOnFailureListener { e ->
-                Log.e("PLACES", "Error al obtener detalles del lugar: ${e.message}")
-                _uiState.update { it.copy(errorMessage = "No se pudieron obtener los detalles del lugar") }
-            }
+        }
     }
 
     fun onSearchTextChange(newText: String, context: Context) {
@@ -160,10 +158,6 @@ class HomeViewModel @Inject constructor(
             .addOnFailureListener { e -> Log.e("PLACES", "Error: ${e.message}") }
     }
 
-    fun onSearchLocationProcessed() {
-        _uiState.update { it.copy(searchLocationResult = null) }
-    }
-
     fun onMarkerClicked(poolId: String) {
         _uiState.update { currentState ->
             val updatedPools = currentState.pools.map { pool ->
@@ -175,10 +169,6 @@ class HomeViewModel @Inject constructor(
             }
             currentState.copy(pools = updatedPools)
         }
-    }
-
-    fun clearManualSearchFlag() {
-        _searchTriggeredManually.value = false
     }
 
     fun clearPredictions() {
@@ -193,5 +183,11 @@ data class MapUiState(
     val searchText: String = "",
     val searchLocationResult: LatLng? = null,
     val predictions: List<AutocompletePrediction> = emptyList(),
+    val showSearchButton: Boolean = false,
     val errorMessage: String? = null
 )
+
+sealed class HomeEvent {
+    data class AnimateToLocation(val latLng: LatLng) : HomeEvent()
+    data class ShowToast(val message: String, val isLong: Boolean = false) : HomeEvent()
+}
