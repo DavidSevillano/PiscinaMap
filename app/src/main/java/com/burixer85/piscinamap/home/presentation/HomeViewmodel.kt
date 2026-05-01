@@ -1,15 +1,10 @@
 package com.burixer85.piscinamap.home.presentation
 
 import android.content.Context
-import android.location.Geocoder
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigationevent.NavigationEventDispatcher
 import coil.Coil
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -25,15 +20,12 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,7 +43,13 @@ class HomeViewModel @Inject constructor(
 
     private var sessionToken: AutocompleteSessionToken? = null
 
+    private var lastMoveTime = 0L
+
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastMoveTime < 150) return
+        lastMoveTime = currentTime
+
         val lastLocation = lastSearchLocation
 
         if (isCameraMoving || lastLocation == null) {
@@ -183,6 +181,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onMarkerClicked(poolId: String) {
+        val selectedPool = _uiState.value.pools.find { it.id == poolId }
+
+        selectedPool?.let { pool ->
+            viewModelScope.launch {
+                _events.send(HomeEvent.AnimateToLocation(LatLng(pool.latitude, pool.longitude)))
+            }
+        }
+
         _uiState.update { currentState ->
             val updatedPools = currentState.pools.map { pool ->
                 if (pool.id == poolId) {
