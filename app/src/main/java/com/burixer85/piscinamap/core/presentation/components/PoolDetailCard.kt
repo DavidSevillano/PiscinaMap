@@ -1,5 +1,6 @@
 package com.burixer85.piscinamap.core.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,12 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.burixer85.piscinamap.BuildConfig
+import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.domain.model.Pool
+import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
 
 @Composable
 fun PoolDetailCard(
@@ -42,21 +49,32 @@ fun PoolDetailCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (!pool.photoUrl.isNullOrEmpty()) {
-                val fullPhotoUrl = "https://maps.googleapis.com/maps/api/place/photo" +
-                        "?maxwidth=400&photo_reference=${pool.photoUrl}" +
-                        "&key=${BuildConfig.GOOGLEMAPS_KEY}"
-
+                val fullPhotoUrl = getGooglePhotoUrl(pool.photoUrl)
                 AsyncImage(
-                    model = fullPhotoUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(fullPhotoUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = pool.name,
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
-
-                Spacer(modifier = Modifier.width(16.dp))
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(R.drawable.ic_pool_placeholder)
+                        .build(),
+                    contentDescription = "Sin foto disponible",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    contentScale = ContentScale.Crop
+                )
             }
+
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -67,6 +85,7 @@ fun PoolDetailCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color(0xFF1A2F4F),
+                    overflow = TextOverflow.Ellipsis,
                     maxLines = 1
                 )
 
@@ -83,6 +102,41 @@ fun PoolDetailCard(
                         text = " ${pool.rating ?: "N/A"}",
                         fontSize = 14.sp,
                         color = Color.Gray
+                    )
+
+                    Text(
+                        text = " • ",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
+                    val statusText = when (pool.isOpenNow) {
+                        true -> "Abierto"
+                        false -> "Cerrado"
+                        null -> "Sin horario."
+                    }
+
+                    val statusColor = when (pool.isOpenNow) {
+                        true -> Color(0xFF4CAF50)
+                        false -> Color(0xFFF44336)
+                        null -> Color.Gray
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(statusColor)
+                    )
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Text(
+                        text = statusText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = statusColor
                     )
                 }
             }
