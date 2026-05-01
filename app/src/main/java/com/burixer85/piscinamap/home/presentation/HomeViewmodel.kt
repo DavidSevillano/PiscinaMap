@@ -47,7 +47,7 @@ class HomeViewModel @Inject constructor(
 
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastMoveTime < 150) return
+        if (isCameraMoving && (currentTime - lastMoveTime < 150)) return
         lastMoveTime = currentTime
 
         val lastLocation = lastSearchLocation
@@ -138,23 +138,37 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onPredictionSelected(prediction: AutocompletePrediction, context: Context) {
+        _uiState.update { it.copy(isLoading = true, predictions = emptyList()) }
+
         val placesClient = Places.createClient(context)
         val placeFields = listOf(Place.Field.NAME, Place.Field.LAT_LNG)
         val request = FetchPlaceRequest.builder(prediction.placeId, placeFields)
             .setSessionToken(sessionToken)
             .build()
 
-        placesClient.fetchPlace(request).addOnSuccessListener { response ->
-            response.place.latLng?.let { latLng ->
-                sessionToken = null
-                _uiState.update { it.copy(searchText = response.place.name ?: "", predictions = emptyList()) }
+        placesClient.fetchPlace(request)
+            .addOnSuccessListener { response ->
+                val latLng = response.place.latLng
+                if (latLng != null) {
+                    sessionToken = null
+                    _uiState.update { it.copy(
+                        searchText = response.place.name ?: "",
+                    ) }
 
-                viewModelScope.launch {
-                    _events.send(HomeEvent.AnimateToLocation(latLng))
+                    viewModelScope.launch {
+                        _events.send(HomeEvent.AnimateToLocation(latLng))
+                    }
+                    fetchPools(latLng.latitude, latLng.longitude, context = context, isManual = true)
+                } else {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Ubicación no disponible") }
                 }
-                fetchPools(latLng.latitude, latLng.longitude, context = context, isManual = true)
             }
-        }
+            .addOnFailureListener {
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    errorMessage = "Error al conectar con el servidor"
+                ) }
+            }
     }
 
     fun onSearchTextChange(newText: String, context: Context) {

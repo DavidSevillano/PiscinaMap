@@ -165,7 +165,10 @@ fun HomeScreen(
                 searchText = uiState.searchText,
                 predictions = uiState.predictions,
                 onSearchTextChange = { viewModel.onSearchTextChange(it, context) },
-                onPredictionClick = { viewModel.onPredictionSelected(it, context) },
+                onPredictionClick = { prediction ->
+                    focusManager.clearFocus()
+                    selectedPool = null
+                    viewModel.onPredictionSelected(prediction, context) },
                 onClearSearch = {
                     viewModel.onSearchTextChange("", context)
                     focusManager.clearFocus()
