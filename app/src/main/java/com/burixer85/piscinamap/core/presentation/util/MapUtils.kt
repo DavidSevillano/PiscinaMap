@@ -12,17 +12,17 @@ import androidx.core.graphics.drawable.DrawableCompat
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import androidx.core.graphics.scale
+import androidx.core.graphics.createBitmap
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun bitmapDescriptorFromVector(
-    context: android.content.Context,
+    context: Context,
     vectorResId: Int,
     size: Int,
     tint: Color? = null
 ): BitmapDescriptor? {
     val drawable = androidx.core.content.ContextCompat.getDrawable(context, vectorResId) ?: return null
 
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(size, size)
     val canvas = Canvas(bitmap)
 
     drawable.setBounds(0, 0, canvas.width, canvas.height)

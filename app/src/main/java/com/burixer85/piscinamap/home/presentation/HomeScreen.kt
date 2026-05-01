@@ -99,7 +99,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -146,7 +146,7 @@ fun HomeScreen(
                     location?.let {
                         val userLatLng = LatLng(it.latitude, it.longitude)
                         cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
-                        viewModel.fetchPools(it.latitude, it.longitude)
+                        viewModel.fetchPools(it.latitude, it.longitude, context = context)
                     }
                 }
             } catch (e: SecurityException) {
@@ -235,7 +235,7 @@ fun HomeScreen(
                 SearchAreaButton(
                     onClick = {
                         val center = cameraPositionState.position.target
-                        viewModel.fetchPools(center.latitude, center.longitude, isManual = true)
+                        viewModel.fetchPools(center.latitude, center.longitude, context = context, isManual = true)
                     }
                 )
             }

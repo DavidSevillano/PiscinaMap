@@ -9,7 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigationevent.NavigationEventDispatcher
+import coil.Coil
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.size.Size
 import com.burixer85.piscinamap.core.domain.model.Pool
+import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
 import com.burixer85.piscinamap.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
@@ -68,7 +74,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun fetchPools(latitude: Double, longitude: Double, isManual: Boolean = false) {
+
+    private fun preloadPoolImages(context: Context, pools: List<Pool>) {
+        val imageLoader = Coil.imageLoader(context)
+        pools.forEach { pool ->
+            val fullUrl = getGooglePhotoUrl(pool.photoUrl)
+
+            fullUrl?.let { url ->
+                val request = ImageRequest.Builder(context)
+                    .data(url)
+                    .size(Size.ORIGINAL)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .build()
+                imageLoader.enqueue(request)
+            }
+        }
+    }
+
+    fun fetchPools(latitude: Double, longitude: Double, context: Context, isManual: Boolean = false) {
         val newLocation = LatLng(latitude, longitude)
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, showSearchButton = false) }
@@ -78,6 +102,8 @@ class HomeViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = { incomingPools ->
+                    preloadPoolImages(context, incomingPools)
+
                     val currentPoolIds = _uiState.value.pools.map { it.id }.toSet()
 
                     val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
@@ -95,9 +121,7 @@ class HomeViewModel @Inject constructor(
 
                     _uiState.update { currentState ->
                         val finalPools = if (isManual) {
-                            // Marcamos como "viejas" las que ya teníamos
                             val oldPools = currentState.pools.map { it.copy(isNew = false) }
-                            // Marcamos como "nuevas" solo las que realmente no conocíamos
                             val newPools = incomingPools.map { pool ->
                                 pool.copy(isNew = pool.id !in currentPoolIds)
                             }
@@ -130,7 +154,7 @@ class HomeViewModel @Inject constructor(
                 viewModelScope.launch {
                     _events.send(HomeEvent.AnimateToLocation(latLng))
                 }
-                fetchPools(latLng.latitude, latLng.longitude, isManual = true)
+                fetchPools(latLng.latitude, latLng.longitude, context = context, isManual = true)
             }
         }
     }
