@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -52,7 +53,7 @@ fun PoolSearchBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         Column(
@@ -77,7 +78,7 @@ fun PoolSearchBar(
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp,
-                        color = Color(0xFF1A2F4F)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -90,9 +91,9 @@ fun PoolSearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged { onFocusChanged(it.isFocused) },
-                placeholder = { Text("Buscar piscinas o zonas...", color = Color.Gray) },
+                placeholder = { Text("Buscar piscinas o zonas...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
+                    Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
@@ -100,7 +101,7 @@ fun PoolSearchBar(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Borrar",
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -111,15 +112,15 @@ fun PoolSearchBar(
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF7F8FA),
-                    unfocusedContainerColor = Color(0xFFF7F8FA),
-                    disabledContainerColor = Color(0xFFF7F8FA),
-                    focusedBorderColor = Color(0xFFE0E6ED),
-                    unfocusedBorderColor = Color(0xFFE0E6ED),
-                    disabledBorderColor = Color(0xFFE0E6ED),
-                    focusedTextColor = Color(0xFF1D293F),
-                    unfocusedTextColor = Color(0xFF1D293F),
-                    cursorColor = Color(0xFF1A2F4F)
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -141,15 +142,15 @@ fun PoolSearchBar(
                                 text = prediction.getPrimaryText(null).toString(),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
-                                color = Color(0xFF1A2F4F)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = prediction.getSecondaryText(null).toString(),
                                 fontSize = 12.sp,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFE0E6ED))
+                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     }
                 }
             }
