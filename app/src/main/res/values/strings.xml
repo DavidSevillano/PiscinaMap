@@ -48,6 +48,10 @@
     <string name="go_back">Go back</string>
     <string name="error_occurred">Error: %1$s</string>
     <string name="retry">Retry</string>
+    <string name="hide_pool">Hide this pool</string>
+    <string name="not_a_pool">This is not a pool</string>
+    <string name="unhide_pool">Show pool again</string>
+    <string name="pool_hidden">This pool is hidden</string>
 
     <!-- Pool Detail Card -->
     <string name="na">N/A</string>

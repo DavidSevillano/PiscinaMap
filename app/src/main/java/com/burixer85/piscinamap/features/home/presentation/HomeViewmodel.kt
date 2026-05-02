@@ -91,7 +91,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun fetchPools(latitude: Double, longitude: Double, context: Context, isManual: Boolean = false) {
+    fun fetchPools(
+        latitude: Double,
+        longitude: Double,
+        context: Context,
+        isManual: Boolean = false
+    ) {
         val newLocation = LatLng(latitude, longitude)
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, showSearchButton = false) }
@@ -152,23 +157,37 @@ class HomeViewModel @Inject constructor(
                 val latLng = response.place.latLng
                 if (latLng != null) {
                     sessionToken = null
-                    _uiState.update { it.copy(
-                        searchText = response.place.name ?: "",
-                    ) }
+                    _uiState.update {
+                        it.copy(
+                            searchText = response.place.name ?: "",
+                        )
+                    }
 
                     viewModelScope.launch {
                         _events.send(HomeEvent.AnimateToLocation(latLng))
                     }
-                    fetchPools(latLng.latitude, latLng.longitude, context = context, isManual = true)
+                    fetchPools(
+                        latLng.latitude,
+                        latLng.longitude,
+                        context = context,
+                        isManual = true
+                    )
                 } else {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Ubicación no disponible") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Ubicación no disponible"
+                        )
+                    }
                 }
             }
             .addOnFailureListener {
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    errorMessage = "Error al conectar con el servidor"
-                ) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error al conectar con el servidor"
+                    )
+                }
             }
     }
 
@@ -218,6 +237,19 @@ class HomeViewModel @Inject constructor(
 
     fun clearPredictions() {
         _uiState.update { it.copy(predictions = emptyList()) }
+    }
+
+    fun updatePoolHiddenState(poolId: String, isHidden: Boolean) {
+        _uiState.update { currentState ->
+            val updatedPools = currentState.pools.map { pool ->
+                if (pool.id == poolId) {
+                    pool.copy(isHidden = isHidden)
+                } else {
+                    pool
+                }
+            }
+            currentState.copy(pools = updatedPools)
+        }
     }
 }
 

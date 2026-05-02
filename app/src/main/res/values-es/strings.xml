@@ -48,6 +48,10 @@
     <string name="go_back">Volver</string>
     <string name="error_occurred">Error: %1$s</string>
     <string name="retry">Reintentar</string>
+    <string name="hide_pool">Ocultar esta piscina</string>
+    <string name="not_a_pool">Esto no es una piscina</string>
+    <string name="unhide_pool">Volver a mostrar piscina</string>
+    <string name="pool_hidden">Esta piscina está oculta</string>
 
     <!-- Pool Detail Card -->
     <string name="na">N/D</string>

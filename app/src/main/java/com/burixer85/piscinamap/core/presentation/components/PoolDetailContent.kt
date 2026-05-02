@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocalPhone
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,7 +86,8 @@ private fun parseRelativeTime(timeStr: String): Long {
 @Composable
 fun PoolDetailContent(
     pool: Pool,
-    onCallClick: (String) -> Unit
+    onCallClick: (String) -> Unit,
+    onHideClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -435,6 +437,24 @@ fun PoolDetailContent(
                     profilePhotoUrl = review.profilePhotoUrl,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
+            }
+        }
+
+        if (onHideClick != null) {
+            Spacer(modifier = Modifier.height(24.dp))
+            OutlinedButton(
+                onClick = onHideClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.VisibilityOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(getString(context, R.string.hide_pool))
             }
         }
 

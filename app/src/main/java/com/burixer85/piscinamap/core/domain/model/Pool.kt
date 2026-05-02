@@ -10,6 +10,7 @@ data class Pool(
     val isOpenNow: Boolean?,
     val photoUrls: List<String> = emptyList(),
     val isNew: Boolean = false,
+    val isHidden: Boolean = false,
     val formattedPhone: String? = null,
     val openingHours: List<String> = emptyList(),
     val currentOpeningHours: String? = null,

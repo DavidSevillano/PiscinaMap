@@ -23,21 +23,26 @@ import com.burixer85.piscinamap.features.home.presentation.HomeViewModel
 fun PiscinaMapNavGraph(
     navController: NavHostController = rememberNavController()
 ) {
+    val homeViewModel: HomeViewModel = hiltViewModel()
+
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
         modifier = Modifier.fillMaxSize()
     ) {
         composable<HomeRoute>(
-            enterTransition = { fadeIn(animationSpec = tween(300)) }
+            enterTransition = {
+                fadeIn(animationSpec = tween(300))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(200))
+            }
         ) { backStackEntry ->
-            val viewModel: HomeViewModel = hiltViewModel(backStackEntry)
-
             HomeScreen(
-                viewModel = viewModel,
+                viewModel = homeViewModel,
                 onNavigateToDetail = { id ->
                     navController.navigate(DetailRoute(poolId = id)) {
-                        popUpTo(HomeRoute) { saveState = true }
+                        popUpTo(HomeRoute)
                     }
                 }
             )
@@ -45,16 +50,28 @@ fun PiscinaMapNavGraph(
 
         composable<DetailRoute>(
             enterTransition = {
-                slideInVertically(initialOffsetY = { it }, animationSpec = tween(400))
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(400)
+                ) + fadeIn(animationSpec = tween(300))
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(300))
+                slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(400)
+                ) + fadeOut(animationSpec = tween(300))
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(300))
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(200))
             },
             popExitTransition = {
-                slideOutVertically(targetOffsetY = { it }, animationSpec = tween(400))
+                slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(400)
+                ) + fadeOut(animationSpec = tween(300))
             }
         ) { backStackEntry ->
             val args = backStackEntry.toRoute<DetailRoute>()
@@ -62,7 +79,10 @@ fun PiscinaMapNavGraph(
             Surface(modifier = Modifier.fillMaxSize()) {
                 DetailScreen(
                     poolId = args.poolId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHiddenStateChanged = { poolId, isHidden ->
+                        homeViewModel.updatePoolHiddenState(poolId, isHidden)
+                    }
                 )
             }
         }

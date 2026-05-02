@@ -70,6 +70,7 @@ fun HomeScreen(
     var lastSelectedPool by remember { mutableStateOf<Pool?>(null) }
     var poolIconNormal by remember { mutableStateOf<BitmapDescriptor?>(null) }
     var poolIconHighlighted by remember { mutableStateOf<BitmapDescriptor?>(null) }
+    var poolIconHidden by remember { mutableStateOf<BitmapDescriptor?>(null) }
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
@@ -78,10 +79,20 @@ fun HomeScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is HomeEvent.AnimateToLocation -> {
-                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(event.latLng, 15f), 1000)
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngZoom(
+                            event.latLng,
+                            15f
+                        ), 1000
+                    )
                 }
+
                 is HomeEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, if (event.isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        event.message,
+                        if (event.isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -95,7 +106,10 @@ fun HomeScreen(
     LaunchedEffect(locationPermissionState.status.isGranted) {
         if (poolIconNormal == null) {
             poolIconNormal = bitmapDescriptorFromVector(context, R.drawable.poolmark, size = 150)
-            poolIconHighlighted = bitmapDescriptorFromVector(context, R.drawable.highlighted_poolmark, size = 175)
+            poolIconHighlighted =
+                bitmapDescriptorFromVector(context, R.drawable.highlighted_poolmark, size = 175)
+            poolIconHidden =
+                bitmapDescriptorFromVector(context, R.drawable.poolmark_hidden, size = 150)
         }
 
         if (uiState.pools.isNotEmpty()) return@LaunchedEffect
@@ -154,13 +168,16 @@ fun HomeScreen(
                             derivedStateOf { selectedPool?.id == pool.id }
                         }
 
+                        val icon = when {
+                            pool.isHidden -> poolIconHidden
+                            isSelected -> poolIconSelected
+                            pool.isNew -> poolIconHighlighted
+                            else -> poolIconNormal
+                        }
+
                         Marker(
                             state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
-                            icon = when {
-                                isSelected -> poolIconSelected
-                                pool.isNew -> poolIconHighlighted
-                                else -> poolIconNormal
-                            },
+                            icon = icon,
                             onClick = {
                                 selectedPool = pool
                                 viewModel.onMarkerClicked(pool.id)
@@ -179,7 +196,8 @@ fun HomeScreen(
                 onPredictionClick = { prediction ->
                     focusManager.clearFocus()
                     selectedPool = null
-                    viewModel.onPredictionSelected(prediction, context) },
+                    viewModel.onPredictionSelected(prediction, context)
+                },
                 onClearSearch = {
                     viewModel.onSearchTextChange("", context)
                     focusManager.clearFocus()
@@ -213,14 +231,21 @@ fun HomeScreen(
 
             AnimatedVisibility(
                 visible = uiState.showSearchButton,
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 180.dp),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 180.dp),
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
                 SearchAreaButton(
                     onClick = {
                         val center = cameraPositionState.position.target
-                        viewModel.fetchPools(center.latitude, center.longitude, context = context, isManual = true)
+                        viewModel.fetchPools(
+                            center.latitude,
+                            center.longitude,
+                            context = context,
+                            isManual = true
+                        )
                     }
                 )
             }

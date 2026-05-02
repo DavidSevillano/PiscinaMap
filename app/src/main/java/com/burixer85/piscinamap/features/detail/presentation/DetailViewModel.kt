@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.burixer85.piscinamap.core.domain.model.Pool
-import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
+import com.burixer85.piscinamap.features.detail.domain.usecases.GetPoolDetailsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    private val detailRepository: DetailRepository,
+    private val getPoolDetailsUseCase: GetPoolDetailsUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -30,7 +30,7 @@ class DetailViewModel @Inject constructor(
 
     private fun loadPoolDetails() {
         viewModelScope.launch {
-            val result = detailRepository.getPoolDetails(poolId)
+            val result = getPoolDetailsUseCase(poolId)
             result.fold(
                 onSuccess = { pool ->
                     _uiState.update { it.copy(pool = pool, isLoading = false, error = null) }
