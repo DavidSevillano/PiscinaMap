@@ -1,3 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PiscinaMap</string>
+
+    <!-- Pool Detail -->
+    <string name="pool_photo">Photo of %1$s</string>
+    <string name="rating_value">Rating</string>
+    <string name="open">Open</string>
+    <string name="closed">Closed</string>
+    <string name="get_directions">Get Directions</string>
+    <string name="call">Call</string>
+    <string name="schedule_today">Today\'s Schedule</string>
+    <string name="schedule">Schedule</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="services">Services</string>
+    <string name="reviews">Reviews</string>
+    <string name="recent">Recent</string>
+    <string name="oldest">Oldest</string>
+    <string name="best">Best</string>
+    <string name="worst">Worst</string>
+
+    <!-- Review Card -->
+    <string name="photo_by">Photo by %1$s</string>
+    <string name="translated_review">Translated review</string>
+    <string name="see_less">See less</string>
+    <string name="see_more">See more</string>
+
+    <!-- Pool Detail Card -->
+    <string name="no_photo_available">No photo available</string>
+    <string name="no_schedule_available">No schedule available</string>
+    <string name="close_detail">Close detail</string>
+
+    <!-- Pool Search Bar -->
+    <string name="search_pools_or_areas">Search pools or areas…</string>
+    <string name="clear">Clear</string>
+
+    <!-- Search Area -->
+    <string name="search_this_area">Search this area</string>
+
+    <!-- Home -->
+    <string name="no_pools_in_this_area">No pools in this area</string>
+    <string name="location_not_available">Location not available</string>
+    <string name="server_connection_error">Error connecting to server</string>
+    <string name="new_pools_found">%1$d new pools found!</string>
+
+    <!-- Detail Screen -->
+    <string name="go_back">Go back</string>
+    <string name="error_occurred">Error: %1$s</string>
+    <string name="retry">Retry</string>
+
+    <!-- Pool Detail Card -->
+    <string name="na">N/A</string>
+    <string name="no_schedule_dot">No schedule.</string>
+
+    <!-- Bottom Bar -->
+    <string name="explore">Explore</string>
+    <string name="favorites">Favorites</string>
+    <string name="settings">Settings</string>
+
+    <!-- DTO Types -->
+    <string name="swimming_pool">Swimming pool</string>
+    <string name="gym">Gym</string>
+    <string name="spa">Spa</string>
+    <string name="parking">Parking</string>
+    <string name="restaurant">Restaurant</string>
+    <string name="cafe">Cafe</string>
+    <string name="changing_room">Changing room</string>
+    <string name="shower">Showers</string>
+    <string name="locker">Lockers</string>
+    <string name="lifeguard">Lifeguard</string>
+    <string name="water_slide">Water slide</string>
+    <string name="kids_pool">Kids pool</string>
 </resources>

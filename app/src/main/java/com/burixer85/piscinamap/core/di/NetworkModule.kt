@@ -3,6 +3,8 @@ package com.burixer85.piscinamap.core.di
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
 import com.burixer85.piscinamap.features.home.data.repository.PoolRepositoryImpl
 import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
+import com.burixer85.piscinamap.features.detail.data.repository.DetailRepositoryImpl
+import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -37,5 +39,11 @@ object NetworkModule {
     @Singleton
     fun providePoolRepository(api: GooglePlacesApi): PoolRepository {
         return PoolRepositoryImpl(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDetailRepository(api: GooglePlacesApi): DetailRepository {
+        return DetailRepositoryImpl(api)
     }
 }

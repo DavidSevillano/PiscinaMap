@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PiscinaMap</string>
+
+    <!-- Pool Detail -->
+    <string name="pool_photo">Foto de %1$s</string>
+    <string name="rating_value">Valoración</string>
+    <string name="open">Abierto</string>
+    <string name="closed">Cerrado</string>
+    <string name="get_directions">Cómo llegar</string>
+    <string name="call">Llamar</string>
+    <string name="schedule_today">Horario de hoy</string>
+    <string name="schedule">Horario</string>
+    <string name="collapse">Contraer</string>
+    <string name="expand">Expandir</string>
+    <string name="services">Servicios</string>
+    <string name="reviews">Reseñas</string>
+    <string name="recent">Recientes</string>
+    <string name="oldest">Antiguas</string>
+    <string name="best">Mejores</string>
+    <string name="worst">Peores</string>
+
+    <!-- Review Card -->
+    <string name="photo_by">Foto de %1$s</string>
+    <string name="translated_review">Reseña traducida</string>
+    <string name="see_less">Ver menos</string>
+    <string name="see_more">Ver más</string>
+
+    <!-- Pool Detail Card -->
+    <string name="no_photo_available">Sin foto disponible</string>
+    <string name="no_schedule_available">Sin horario disponible</string>
+    <string name="close_detail">Cerrar detalle</string>
+
+    <!-- Pool Search Bar -->
+    <string name="search_pools_or_areas">Buscar piscinas o zonas…</string>
+    <string name="clear">Borrar</string>
+
+    <!-- Search Area -->
+    <string name="search_this_area">Buscar en esta zona</string>
+
+    <!-- Home -->
+    <string name="no_pools_in_this_area">No hay piscinas en esta zona</string>
+    <string name="location_not_available">Ubicación no disponible</string>
+    <string name="server_connection_error">Error al conectar con el servidor</string>
+    <string name="new_pools_found">¡Se han encontrado %1$d nuevas piscinas!</string>
+
+    <!-- Detail Screen -->
+    <string name="go_back">Volver</string>
+    <string name="error_occurred">Error: %1$s</string>
+    <string name="retry">Reintentar</string>
+
+    <!-- Pool Detail Card -->
+    <string name="na">N/D</string>
+    <string name="no_schedule_dot">Sin horario.</string>
+
+    <!-- Bottom Bar -->
+    <string name="explore">Explorar</string>
+    <string name="favorites">Favoritos</string>
+    <string name="settings">Ajustes</string>
+
+    <!-- DTO Types -->
+    <string name="swimming_pool">Piscina</string>
+    <string name="gym">Gimnasio</string>
+    <string name="spa">Spa</string>
+    <string name="parking">Parking</string>
+    <string name="restaurant">Restaurante</string>
+    <string name="cafe">Cafetería</string>
+    <string name="changing_room">Vestuarios</string>
+    <string name="shower">Duchas</string>
+    <string name="locker">Taquis</string>
+    <string name="lifeguard">Socorrista</string>
+    <string name="water_slide">Tobogán</string>
+    <string name="kids_pool">Piscina infantil</string>
+</resources>

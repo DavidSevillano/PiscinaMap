@@ -13,15 +13,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 
 @Composable
 fun SearchAreaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val buttonText = getString(context, R.string.search_this_area)
+
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -42,7 +48,7 @@ fun SearchAreaButton(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Buscar en esta zona",
+            text = buttonText,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium
         )

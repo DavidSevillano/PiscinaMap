@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 
 @Composable
@@ -51,6 +53,10 @@ fun PoolSearchBar(
     onFocusChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val placeholderText = getString(context, R.string.search_pools_or_areas)
+    val clearText = getString(context, R.string.clear)
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
@@ -74,7 +80,7 @@ fun PoolSearchBar(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "PiscinaMap",
+                    text = getString(context, R.string.app_name),
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp,
@@ -91,7 +97,7 @@ fun PoolSearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged { onFocusChanged(it.isFocused) },
-                placeholder = { Text("Buscar piscinas o zonas...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                placeholder = { Text(placeholderText, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 },
@@ -100,7 +106,7 @@ fun PoolSearchBar(
                         IconButton(onClick = onClearSearch) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Borrar",
+                                contentDescription = clearText,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }

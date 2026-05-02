@@ -8,6 +8,23 @@ data class Pool(
     val address: String,
     val rating: Float?,
     val isOpenNow: Boolean?,
-    val photoUrl: String?,
-    val isNew: Boolean = false
+    val photoUrls: List<String> = emptyList(),
+    val isNew: Boolean = false,
+    val formattedPhone: String? = null,
+    val openingHours: List<String> = emptyList(),
+    val currentOpeningHours: String? = null,
+    val services: List<String> = emptyList(),
+    val reviews: List<Review> = emptyList()
+) {
+    val photoUrl: String?
+        get() = photoUrls.firstOrNull()
+}
+
+data class Review(
+    val authorName: String,
+    val rating: Float,
+    val text: String,
+    val relativeTimeDescription: String,
+    val language: String? = null,
+    val profilePhotoUrl: String? = null
 )
