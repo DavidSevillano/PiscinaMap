@@ -1,13 +1,14 @@
-package com.burixer85.piscinamap.home.presentation
+package com.burixer85.piscinamap.features.home.presentation
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToDetail: (String) -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,7 +70,7 @@ fun HomeScreen(
     var poolIconNormal by remember { mutableStateOf<BitmapDescriptor?>(null) }
     var poolIconHighlighted by remember { mutableStateOf<BitmapDescriptor?>(null) }
     val locationPermissionState = rememberPermissionState(
-        android.Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION
     )
 
     LaunchedEffect(Unit) {
@@ -95,18 +97,17 @@ fun HomeScreen(
             poolIconHighlighted = bitmapDescriptorFromVector(context, R.drawable.highlighted_poolmark, size = 175)
         }
 
+        if (uiState.pools.isNotEmpty()) return@LaunchedEffect
+
         if (locationPermissionState.status.isGranted) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    location?.let {
-                        val userLatLng = LatLng(it.latitude, it.longitude)
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
-                        viewModel.fetchPools(it.latitude, it.longitude, context = context)
-                    }
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    val userLatLng = LatLng(it.latitude, it.longitude)
+
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                    viewModel.fetchPools(it.latitude, it.longitude, context = context)
                 }
-            } catch (e: SecurityException) {
-                Log.e("MAP_ERROR", "Error de ubicación: ${e.message}")
             }
         } else {
             locationPermissionState.launchPermissionRequest()
@@ -126,38 +127,47 @@ fun HomeScreen(
                 .fillMaxSize()
         ) {
 
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                properties = remember(locationPermissionState.status.isGranted) {
-                    MapProperties(
-                        mapStyleOptions = MapStyleOptions("[{ \"featureType\": \"poi\", \"stylers\": [{ \"visibility\": \"off\" }] }]"),
-                        isMyLocationEnabled = locationPermissionState.status.isGranted
-                    )
-                },
-                cameraPositionState = cameraPositionState,
-                onMapClick = { selectedPool = null; focusManager.clearFocus() }
+            val mapProperties = remember(locationPermissionState.status.isGranted) {
+                MapProperties(
+                    mapStyleOptions = MapStyleOptions("[{ \"featureType\": \"poi\", \"stylers\": [{ \"visibility\": \"off\" }] }]"),
+                    isMyLocationEnabled = locationPermissionState.status.isGranted
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF1EEE8))
             ) {
-                val poolIconSelected = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    properties = mapProperties,
+                    cameraPositionState = cameraPositionState,
+                    onMapClick = { selectedPool = null; focusManager.clearFocus() }
+                ) {
+                    val poolIconSelected =
+                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
 
-                uiState.pools.forEach { pool ->
-                    val isSelected by remember(selectedPool, pool.id) {
-                        derivedStateOf { selectedPool?.id == pool.id }
+                    uiState.pools.forEach { pool ->
+                        val isSelected by remember(selectedPool, pool.id) {
+                            derivedStateOf { selectedPool?.id == pool.id }
+                        }
+
+                        Marker(
+                            state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
+                            icon = when {
+                                isSelected -> poolIconSelected
+                                pool.isNew -> poolIconHighlighted
+                                else -> poolIconNormal
+                            },
+                            onClick = {
+                                selectedPool = pool
+                                viewModel.onMarkerClicked(pool.id)
+                                true
+                            },
+
+                            )
                     }
-
-                    Marker(
-                        state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
-                        icon = when {
-                            isSelected -> poolIconSelected
-                            pool.isNew -> poolIconHighlighted
-                            else -> poolIconNormal
-                        },
-                        onClick = {
-                            selectedPool = pool
-                            viewModel.onMarkerClicked(pool.id)
-                            true
-                        },
-
-                    )
                 }
             }
 
@@ -190,7 +200,11 @@ fun HomeScreen(
                 lastSelectedPool?.let { pool ->
                     PoolDetailCard(
                         pool = pool,
-                        onClose = { selectedPool = null }
+                        onClose = { selectedPool = null },
+                        onNavigateToDetail = { id ->
+                            focusManager.clearFocus()
+                            onNavigateToDetail(id)
+                        }
                     )
                 }
             }

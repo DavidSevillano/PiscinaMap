@@ -1,4 +1,4 @@
-package com.burixer85.piscinamap.home.presentation
+package com.burixer85.piscinamap.features.home.presentation
 
 import android.content.Context
 import android.location.Location
@@ -11,7 +11,7 @@ import coil.request.ImageRequest
 import coil.size.Size
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
-import com.burixer85.piscinamap.home.domain.usecases.GetNearbyPoolsUseCase
+import com.burixer85.piscinamap.features.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -20,6 +20,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +37,7 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MapUiState(isLoading = true))
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
-    private val _events = kotlinx.coroutines.channels.Channel<HomeEvent>()
+    private val _events = Channel<HomeEvent>()
     val events = _events.receiveAsFlow()
 
     private var lastSearchLocation: LatLng? = null

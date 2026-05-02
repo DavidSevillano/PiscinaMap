@@ -1,10 +1,10 @@
-package com.burixer85.piscinamap.home.data.repository
+package com.burixer85.piscinamap.features.home.data.repository
 
 import android.util.Log
 import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
 import com.burixer85.piscinamap.core.data.dto.toDomain
-import com.burixer85.piscinamap.home.domain.repository.PoolRepository
+import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
 import javax.inject.Inject
 import com.burixer85.piscinamap.core.domain.model.Pool
 

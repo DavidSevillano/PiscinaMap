@@ -1,8 +1,8 @@
 package com.burixer85.piscinamap.core.di
 
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
-import com.burixer85.piscinamap.home.data.repository.PoolRepositoryImpl
-import com.burixer85.piscinamap.home.domain.repository.PoolRepository
+import com.burixer85.piscinamap.features.home.data.repository.PoolRepositoryImpl
+import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides

@@ -1,4 +1,4 @@
-package com.burixer85.piscinamap.home.domain.repository
+package com.burixer85.piscinamap.features.home.domain.repository
 
 import com.burixer85.piscinamap.core.domain.model.Pool
 

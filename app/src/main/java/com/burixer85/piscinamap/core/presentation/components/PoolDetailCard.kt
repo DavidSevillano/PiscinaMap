@@ -31,13 +31,14 @@ import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoU
 fun PoolDetailCard(
     pool: Pool,
     onClose: () -> Unit,
+    onNavigateToDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .height(110.dp)
-            .clickable(enabled = false) { },
+            .clickable { onNavigateToDetail(pool.id) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(8.dp)

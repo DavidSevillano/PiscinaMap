@@ -41,6 +41,7 @@ places = "3.3.0"
 androidxFoundation = "1.10.6"
 coil = "2.6.0"
 animation = "1.11.0"
+uiVersion = "1.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -98,6 +99,7 @@ google-android-libraries-places = { group = "com.google.android.libraries.places
 foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "androidxFoundation" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
