@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.burixer85.piscinamap.R
@@ -47,22 +48,26 @@ fun PoolDetailCard(
     onNavigateToDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .clickable { onNavigateToDetail(pool.id) }
-            .offset(y = (-60).dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(8.dp)
+    Box(modifier = modifier
+        .fillMaxWidth()
+        .offset(y = (-80).dp)
+        .zIndex(1f)
     ) {
-        Row(
+        Card(
             modifier = Modifier
-                .padding(12.dp)
-                .fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .height(110.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(8.dp)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onNavigateToDetail(pool.id) }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             if (!pool.photoUrl.isNullOrEmpty()) {
                 val fullPhotoUrl = getGooglePhotoUrl(pool.photoUrl)
                 AsyncImage(
@@ -167,5 +172,6 @@ fun PoolDetailCard(
                 )
             }
         }
+    }
     }
 }
