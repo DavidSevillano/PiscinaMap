@@ -1,6 +1,5 @@
 package com.burixer85.piscinamap.features.detail.presentation
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.burixer85.piscinamap.core.domain.model.Pool
@@ -15,20 +14,24 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
-    private val getPoolDetailsUseCase: GetPoolDetailsUseCase,
-    savedStateHandle: SavedStateHandle
+    private val getPoolDetailsUseCase: GetPoolDetailsUseCase
 ) : ViewModel() {
 
-    private val poolId: String = savedStateHandle.get<String>("poolId") ?: ""
+    private var poolId: String = ""
 
     private val _uiState = MutableStateFlow(DetailUiState(isLoading = true))
     val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
 
-    init {
-        loadPoolDetails()
+    fun setPoolId(id: String) {
+        if (id != poolId) {
+            poolId = id
+            loadPoolDetails()
+        }
     }
 
     private fun loadPoolDetails() {
+        if (poolId.isBlank()) return
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             val result = getPoolDetailsUseCase(poolId)
             result.fold(
@@ -43,7 +46,6 @@ class DetailViewModel @Inject constructor(
     }
 
     fun retry() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
         loadPoolDetails()
     }
 }

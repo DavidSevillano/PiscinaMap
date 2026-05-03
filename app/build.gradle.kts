@@ -31,7 +31,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "GOOGLEMAPS_KEY", "\"${localProperties.getProperty("googlemaps.key")}\"")
+        buildConfigField(
+            "String",
+            "GOOGLEMAPS_KEY",
+            "\"${localProperties.getProperty("googlemaps.key")}\""
+        )
 
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
 
@@ -90,7 +94,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.navigation.compose)
     //implementation(libs.play.services.ads)
 
     // Google Maps

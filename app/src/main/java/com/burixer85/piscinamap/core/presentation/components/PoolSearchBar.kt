@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -97,9 +96,18 @@ fun PoolSearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged { onFocusChanged(it.isFocused) },
-                placeholder = { Text(placeholderText, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                placeholder = {
+                    Text(
+                        placeholderText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
@@ -156,7 +164,10 @@ fun PoolSearchBar(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
                     }
                 }
             }

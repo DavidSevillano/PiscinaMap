@@ -10,11 +10,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +33,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.domain.model.Pool
-import com.burixer85.piscinamap.core.presentation.components.PiscinaMapBottomBar
 import com.burixer85.piscinamap.core.presentation.components.PoolDetailCard
 import com.burixer85.piscinamap.core.presentation.components.PoolSearchBar
 import com.burixer85.piscinamap.core.presentation.components.SearchAreaButton
@@ -58,7 +57,8 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToDetail: (String) -> Unit
+    onNavigateToDetail: (String) -> Unit,
+    bottomPadding: Int = 0
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -133,62 +133,59 @@ fun HomeScreen(
         viewModel.onMapMoved(cameraPositionState.position.target, cameraPositionState.isMoving)
     }
 
-    Scaffold(
-        bottomBar = { PiscinaMapBottomBar() }
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val mapProperties = remember(locationPermissionState.status.isGranted) {
+            MapProperties(
+                mapStyleOptions = MapStyleOptions("[{ \"featureType\": \"poi\", \"stylers\": [{ \"visibility\": \"off\" }] }]"),
+                isMyLocationEnabled = locationPermissionState.status.isGranted
+            )
+        }
+
         Box(
             modifier = Modifier
-                .padding(paddingValues)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
         ) {
-
-            val mapProperties = remember(locationPermissionState.status.isGranted) {
-                MapProperties(
-                    mapStyleOptions = MapStyleOptions("[{ \"featureType\": \"poi\", \"stylers\": [{ \"visibility\": \"off\" }] }]"),
-                    isMyLocationEnabled = locationPermissionState.status.isGranted
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                properties = mapProperties,
+                cameraPositionState = cameraPositionState,
+                onMapClick = { selectedPool = null; focusManager.clearFocus() }
             ) {
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    properties = mapProperties,
-                    cameraPositionState = cameraPositionState,
-                    onMapClick = { selectedPool = null; focusManager.clearFocus() }
-                ) {
-                    val poolIconSelected =
-                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                val poolIconSelected =
+                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
 
-                    uiState.pools.forEach { pool ->
-                        val isSelected by remember(selectedPool, pool.id) {
-                            derivedStateOf { selectedPool?.id == pool.id }
-                        }
-
-                        val icon = when {
-                            pool.isHidden -> poolIconHidden
-                            isSelected -> poolIconSelected
-                            pool.isNew -> poolIconHighlighted
-                            else -> poolIconNormal
-                        }
-
-                        Marker(
-                            state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
-                            icon = icon,
-                            onClick = {
-                                selectedPool = pool
-                                viewModel.onMarkerClicked(pool.id)
-                                true
-                            },
-
-                            )
+                uiState.pools.forEach { pool ->
+                    val isSelected by remember(selectedPool, pool.id) {
+                        derivedStateOf { selectedPool?.id == pool.id }
                     }
+
+                    val icon = when {
+                        pool.isHidden -> poolIconHidden
+                        isSelected -> poolIconSelected
+                        pool.isNew -> poolIconHighlighted
+                        else -> poolIconNormal
+                    }
+
+                    Marker(
+                        state = MarkerState(position = LatLng(pool.latitude, pool.longitude)),
+                        icon = icon,
+                        onClick = {
+                            selectedPool = pool
+                            viewModel.onMarkerClicked(pool.id)
+                            true
+                        },
+
+                        )
                 }
             }
+        }
 
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             PoolSearchBar(
                 searchText = uiState.searchText,
                 predictions = uiState.predictions,
@@ -204,65 +201,65 @@ fun HomeScreen(
                 },
                 onFocusChanged = { isFocused ->
                     if (!isFocused) viewModel.clearPredictions()
-                }
+                },
             )
-
-
-            AnimatedVisibility(
-                visible = selectedPool != null,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                lastSelectedPool?.let { pool ->
-                    PoolDetailCard(
-                        pool = pool,
-                        onClose = { selectedPool = null },
-                        onNavigateToDetail = { id ->
-                            focusManager.clearFocus()
-                            onNavigateToDetail(id)
-                        }
-                    )
-                }
-            }
-
 
             AnimatedVisibility(
                 visible = uiState.showSearchButton,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 180.dp),
                 enter = fadeIn(),
                 exit = fadeOut()
-            ) {
-                SearchAreaButton(
-                    onClick = {
-                        val center = cameraPositionState.position.target
-                        viewModel.fetchPools(
-                            center.latitude,
-                            center.longitude,
-                            context = context,
-                            isManual = true
-                        )
+        ) {
+            SearchAreaButton(
+                onClick = {
+                    val center = cameraPositionState.position.target
+                    viewModel.fetchPools(
+                        center.latitude,
+                        center.longitude,
+                        context = context,
+                        isManual = true
+                    )
+                }
+            )
+        }
+        }
+
+        AnimatedVisibility(
+            visible = selectedPool != null,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = (8 + bottomPadding).dp
+                ),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            lastSelectedPool?.let { pool ->
+                PoolDetailCard(
+                    pool = pool,
+                    onClose = { selectedPool = null },
+                    onNavigateToDetail = { id ->
+                        focusManager.clearFocus()
+                        onNavigateToDetail(id)
                     }
                 )
             }
+        }
 
-            if (uiState.isLoading) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            }
 
-            uiState.errorMessage?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 16.dp)
-                )
-            }
+        if (uiState.isLoading) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center))
+        }
+
+        uiState.errorMessage?.let { error ->
+            Text(
+                text = error,
+                color = Color.Red,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+            )
         }
     }
 }
