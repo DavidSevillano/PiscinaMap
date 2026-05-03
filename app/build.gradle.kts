@@ -37,12 +37,33 @@ android {
             "\"${localProperties.getProperty("googlemaps.key")}\""
         )
 
+        buildConfigField(
+            "String",
+            "TEST_DEVICE_ID",
+            "\"${localProperties.getProperty("admob.test.device.id")}\""
+        )
+
+        buildConfigField(
+            "String",
+            "ADMOB_INTERSTITIAL_ID",
+            "\"${localProperties.getProperty("admob.interstitial.id")}\""
+        )
+
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
+        manifestPlaceholders["admobAppId"] = "${localProperties.getProperty("admob.app.id")}"
 
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "TEST_DEVICE_ID",
+                "\"${localProperties.getProperty("admob.test.device.id")}\""
+            )
+        }
         release {
+            buildConfigField("String", "TEST_DEVICE_ID", "\"\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -94,7 +115,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
-    //implementation(libs.play.services.ads)
+    implementation(libs.play.services.ads)
 
     // Google Maps
     implementation(libs.google.maps.android.maps.compose)
