@@ -73,7 +73,7 @@ fun PiscinaMapNavGraph(
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
-                        bottomPadding = 150
+                        bottomPadding = 200
                     )
                 }
                 entry<DetailRouteNav> { key ->

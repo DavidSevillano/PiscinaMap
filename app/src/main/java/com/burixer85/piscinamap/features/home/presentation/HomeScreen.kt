@@ -11,6 +11,9 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -188,9 +191,11 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .statusBarsPadding()
         ) {
+            Spacer(modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(MaterialTheme.colorScheme.surface))
             PoolSearchBar(
                 searchText = uiState.searchText,
                 predictions = uiState.predictions,
@@ -214,17 +219,22 @@ fun HomeScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                SearchAreaButton(
-                    onClick = {
-                        val center = cameraPositionState.position.target
-                        viewModel.fetchPools(
-                            center.latitude,
-                            center.longitude,
-                            context = context,
-                            isManual = true
-                        )
-                    }
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SearchAreaButton(
+                        onClick = {
+                            val center = cameraPositionState.position.target
+                            viewModel.fetchPools(
+                                center.latitude,
+                                center.longitude,
+                                context = context,
+                                isManual = true
+                            )
+                        }
+                    )
+                }
             }
         }
 

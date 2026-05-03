@@ -1,8 +1,10 @@
 package com.burixer85.piscinamap
 
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.WindowCompat
 import com.burixer85.piscinamap.navigation.PiscinaMapNavGraph
 import com.burixer85.piscinamap.ui.theme.PiscinaMapTheme
 import com.google.android.gms.ads.AdRequest
@@ -35,6 +38,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        window.statusBarColor = 0xFFFAFAFA.toInt()
+        window.navigationBarColor = 0x00000000
+
         setContent {
             PiscinaMapTheme {
                 Surface(
