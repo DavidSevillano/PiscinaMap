@@ -70,9 +70,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadAndShowAd() {
+        val interstitialId = if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/5224354917" else BuildConfig.ADMOB_INTERSTITIAL_ID
         InterstitialAd.load(
             this,
-            BuildConfig.ADMOB_INTERSTITIAL_ID,
+            interstitialId,
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {

@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.burixer85.piscinamap.BuildConfig
 import com.google.android.gms.ads.admanager.AdManagerAdView
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.LoadAdError
 
 @Composable
 fun AdMobBanner(
@@ -37,13 +39,18 @@ fun AdMobBanner(
 
     AndroidView(
         factory = { ctx ->
+            val bannerId = if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/6300978111" else BuildConfig.ADMOB_BANNER_ID
             AdManagerAdView(ctx).apply {
                 setAdSize(AdSize.SMART_BANNER)
-                adUnitId = BuildConfig.ADMOB_BANNER_ID
+                adUnitId = bannerId
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
+                adListener = object : AdListener() {
+                    override fun onAdLoaded() {}
+                    override fun onAdFailedToLoad(error: LoadAdError) {}
+                }
                 loadAd(AdRequest.Builder().build())
                 adViewRef = this
             }

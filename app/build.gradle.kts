@@ -55,6 +55,17 @@ android {
             "\"${localProperties.getProperty("admob.banner.id")}\""
         )
 
+        buildConfigField(
+            "String",
+            "ADMOB_NATIVE_ID",
+            "\"${localProperties.getProperty("admob.native.id")}\""
+        )
+        buildConfigField(
+            "Boolean",
+            "USE_TEST_ADS",
+            "true"
+        )
+
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
         manifestPlaceholders["admobAppId"] = "${localProperties.getProperty("admob.app.id")}"
 

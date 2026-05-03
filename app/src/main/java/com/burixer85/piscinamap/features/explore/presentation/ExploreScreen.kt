@@ -40,13 +40,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.presentation.components.NativeAdCard
 import com.burixer85.piscinamap.core.presentation.components.PoolListCard
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.location.LocationServices
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -58,6 +65,25 @@ fun ExploreScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+    var adLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val nativeId =
+            if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/2247696110" else com.burixer85.piscinamap.BuildConfig.ADMOB_NATIVE_ID
+        val adLoader = AdLoader.Builder(context, nativeId)
+            .forNativeAd { ad ->
+                nativeAd = ad
+                adLoaded = true
+            }
+            .withAdListener(object : AdListener() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {}
+                override fun onAdLoaded() {}
+            })
+            .build()
+        adLoader.loadAds(AdRequest.Builder().build(), 1)
+    }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
@@ -158,11 +184,30 @@ fun ExploreScreen(
                         val visiblePools = uiState.pools.filter { pool ->
                             !HiddenPoolsManager.isHidden(context, pool.id)
                         }
-                        items(visiblePools) { pool ->
-                            PoolListCard(
-                                pool = pool,
-                                onNavigateToDetail = onNavigateToDetail
-                            )
+
+                        if (visiblePools.size >= 2) {
+                            items(2) { index ->
+                                PoolListCard(
+                                    pool = visiblePools[index],
+                                    onNavigateToDetail = onNavigateToDetail
+                                )
+                            }
+                            item(key = "nativeAd") {
+                                NativeAdCard(nativeAd = nativeAd)
+                            }
+                            items(visiblePools.size - 2) { index ->
+                                PoolListCard(
+                                    pool = visiblePools[index + 2],
+                                    onNavigateToDetail = onNavigateToDetail
+                                )
+                            }
+                        } else {
+                            items(visiblePools) { pool ->
+                                PoolListCard(
+                                    pool = pool,
+                                    onNavigateToDetail = onNavigateToDetail
+                                )
+                            }
                         }
 
                         item {
