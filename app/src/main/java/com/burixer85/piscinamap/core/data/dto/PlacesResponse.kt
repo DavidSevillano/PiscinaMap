@@ -2,8 +2,10 @@ package com.burixer85.piscinamap.core.data.dto
 
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.domain.model.Review
+import com.burixer85.piscinamap.core.presentation.util.PoolUtils
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.util.Calendar
 
 @Serializable
 data class PlacesResponse(
@@ -113,8 +115,9 @@ fun PlaceDetailsDto.toDomain(): Pool {
         }
     }
 
-    val weekdayText = this.openingHours?.weekdayText ?: emptyList()
-    val currentOpeningHours = weekdayText.firstOrNull()
+val weekdayText = this.openingHours?.weekdayText ?: emptyList()
+    val currentDayIndex = PoolUtils.getCurrentDayIndex()
+    val currentOpeningHours = weekdayText.getOrNull(currentDayIndex)
 
     return Pool(
         id = "",

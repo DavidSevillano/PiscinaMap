@@ -52,7 +52,7 @@ fun PoolDetailCard(
             .fillMaxWidth()
             .height(110.dp)
             .clickable { onNavigateToDetail(pool.id) }
-            .offset(y = (-50).dp),
+            .offset(y = (-60).dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(8.dp)

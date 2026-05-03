@@ -59,7 +59,9 @@ import coil.compose.AsyncImage
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
+import com.burixer85.piscinamap.core.presentation.util.PoolUtils
 import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
+import java.util.Calendar
 
 private fun parseRelativeTime(timeStr: String): Long {
     val lower = timeStr.lowercase()
@@ -89,9 +91,10 @@ fun PoolDetailContent(
     onCallClick: (String) -> Unit,
     onHideClick: (() -> Unit)? = null
 ) {
-    val context = LocalContext.current
+val context = LocalContext.current
     val scrollState = rememberScrollState()
     val photoUrls = pool.photoUrls.ifEmpty { listOf(null) }
+    val currentDayIndex = PoolUtils.getCurrentDayIndex()
 
     Column(
         modifier = Modifier
@@ -325,7 +328,7 @@ fun PoolDetailContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     pool.openingHours.forEachIndexed { index, hour ->
-                        if (index > 0) {
+                        if (index != currentDayIndex) {
                             Text(
                                 text = hour,
                                 style = MaterialTheme.typography.bodyMedium,
