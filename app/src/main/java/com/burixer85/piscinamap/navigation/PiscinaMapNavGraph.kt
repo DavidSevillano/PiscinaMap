@@ -20,6 +20,10 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,7 @@ import com.burixer85.piscinamap.features.home.presentation.HomeScreen
 fun PiscinaMapNavGraph(
     modifier: Modifier = Modifier
 ) {
+    var navCounter by remember { mutableIntStateOf(0) }
     val backStack = rememberNavBackStack(HomeRouteNav)
 
     val currentRoute = backStack.lastOrNull()
@@ -46,47 +51,62 @@ fun PiscinaMapNavGraph(
         NavDisplay(
             modifier = Modifier.fillMaxSize(),
             backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = {
+                navCounter++
+                backStack.removeLastOrNull()
+            },
             entryProvider = entryProvider {
                 entry<HomeRouteNav> {
                     HomeScreen(
                         onNavigateToDetail = { poolId ->
+                            navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
-                        bottomPadding = 100
+                        bottomPadding = 140
                     )
                 }
                 entry<ExploreRouteNav> {
-                    ExploreScreen()
+                    ExploreScreen(
+                        onNavigateToDetail = { poolId ->
+                            navCounter++
+                            backStack.add(DetailRouteNav(poolId))
+                        },
+                        bottomPadding = 130
+                    )
                 }
                 entry<DetailRouteNav> { key ->
                     val detailViewModel: DetailViewModel = viewModel(
-                        key = "detail_vm_${key.poolId}"
+                        key = "detail_vm_${key.poolId}_$navCounter"
                     )
                     detailViewModel.setPoolId(key.poolId)
                     DetailScreen(
                         poolId = key.poolId,
                         viewModel = detailViewModel,
-                        onBack = { backStack.removeLastOrNull() }
+                        onBack = {
+                            backStack.removeLastOrNull()
+                        }
                     )
                 }
             },
             transitionSpec = {
-                val horizontalAnimation = slideInHorizontally(
+                val horizontalAnimation = (slideInHorizontally(
                     animationSpec = tween(300)
-                ) { it } togetherWith slideOutHorizontally(
+                ) { it } + fadeIn(animationSpec = tween(300))) togetherWith
+                        (slideOutHorizontally(
+                            animationSpec = tween(300)
+                        ) { -it } + fadeOut(animationSpec = tween(300)))
+                val verticalUpAnimation = (slideInVertically(
                     animationSpec = tween(300)
-                ) { -it }
-                val verticalUpAnimation = slideInVertically(
+                ) { it } + fadeIn(animationSpec = tween(300))) togetherWith
+                        (slideOutVertically(
+                            animationSpec = tween(300)
+                        ) { -it } + fadeOut(animationSpec = tween(300)))
+                val verticalDownAnimation = (slideInVertically(
                     animationSpec = tween(300)
-                ) { it } togetherWith slideOutVertically(
-                    animationSpec = tween(300)
-                ) { -it }
-                val verticalDownAnimation = slideInVertically(
-                    animationSpec = tween(300)
-                ) { -it } togetherWith slideOutVertically(
-                    animationSpec = tween(300)
-                ) { it }
+                ) { -it } + fadeIn(animationSpec = tween(300))) togetherWith
+                        (slideOutVertically(
+                            animationSpec = tween(300)
+                        ) { it } + fadeOut(animationSpec = tween(300)))
 
                 val fromRouteName = initialState.key.toString()
                 val toRouteName = targetState.key.toString()
@@ -107,16 +127,18 @@ fun PiscinaMapNavGraph(
                 }
             },
             popTransitionSpec = {
-                val horizontalAnimation = slideInHorizontally(
+                val horizontalAnimation = (slideInHorizontally(
                     animationSpec = tween(300)
-                ) { -it } togetherWith slideOutHorizontally(
+                ) { -it } + fadeIn(animationSpec = tween(300))) togetherWith
+                        (slideOutHorizontally(
+                            animationSpec = tween(300)
+                        ) { it } + fadeOut(animationSpec = tween(300)))
+                val verticalDownAnimation = (slideInVertically(
                     animationSpec = tween(300)
-                ) { it }
-                val verticalDownAnimation = slideInVertically(
-                    animationSpec = tween(300)
-                ) { -it } togetherWith slideOutVertically(
-                    animationSpec = tween(300)
-                ) { it }
+                ) { -it } + fadeIn(animationSpec = tween(300))) togetherWith
+                        (slideOutVertically(
+                            animationSpec = tween(300)
+                        ) { it } + fadeOut(animationSpec = tween(300)))
 
                 val fromRouteName = initialState.key.toString()
 

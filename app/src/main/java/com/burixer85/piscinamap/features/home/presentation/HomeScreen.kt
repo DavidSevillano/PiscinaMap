@@ -12,7 +12,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -184,7 +186,10 @@ fun HomeScreen(
         }
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
         ) {
             PoolSearchBar(
                 searchText = uiState.searchText,
@@ -208,19 +213,19 @@ fun HomeScreen(
                 visible = uiState.showSearchButton,
                 enter = fadeIn(),
                 exit = fadeOut()
-        ) {
-            SearchAreaButton(
-                onClick = {
-                    val center = cameraPositionState.position.target
-                    viewModel.fetchPools(
-                        center.latitude,
-                        center.longitude,
-                        context = context,
-                        isManual = true
-                    )
-                }
-            )
-        }
+            ) {
+                SearchAreaButton(
+                    onClick = {
+                        val center = cameraPositionState.position.target
+                        viewModel.fetchPools(
+                            center.latitude,
+                            center.longitude,
+                            context = context,
+                            isManual = true
+                        )
+                    }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -230,7 +235,7 @@ fun HomeScreen(
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = (8 + bottomPadding).dp
+                    bottom = bottomPadding.dp
                 ),
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
@@ -249,7 +254,12 @@ fun HomeScreen(
 
 
         if (uiState.isLoading) {
-            CircularProgressIndicator(Modifier.align(Alignment.Center))
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
 
         uiState.errorMessage?.let { error ->

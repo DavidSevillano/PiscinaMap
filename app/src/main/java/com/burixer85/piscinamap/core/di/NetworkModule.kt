@@ -6,6 +6,8 @@ import com.burixer85.piscinamap.features.home.data.repository.PoolRepositoryImpl
 import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
 import com.burixer85.piscinamap.features.detail.data.repository.DetailRepositoryImpl
 import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
+import com.burixer85.piscinamap.features.explore.data.repository.ExploreRepositoryImpl
+import com.burixer85.piscinamap.features.explore.domain.repository.ExploreRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -47,5 +49,11 @@ object NetworkModule {
     @Singleton
     fun provideDetailRepository(api: GooglePlacesApi): DetailRepository {
         return DetailRepositoryImpl(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExploreRepository(api: GooglePlacesApi, @ApplicationContext context: Context): ExploreRepository {
+        return ExploreRepositoryImpl(api, context)
     }
 }

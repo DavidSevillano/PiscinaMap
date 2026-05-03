@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetNearbyPoolsUseCase @Inject constructor(
     private val repository: PoolRepository
 ) {
-    suspend operator fun invoke(lat: Double, lng: Double): Result<List<Pool>> {
-        return repository.searchNearbyPools(lat, lng, 2500)
+    suspend operator fun invoke(lat: Double, lng: Double, radius: Int = 2500): Result<List<Pool>> {
+        return repository.searchNearbyPools(lat, lng, radius)
     }
 }
