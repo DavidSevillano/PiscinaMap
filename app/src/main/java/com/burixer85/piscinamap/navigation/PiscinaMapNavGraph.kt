@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -31,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.burixer85.piscinamap.core.presentation.components.AdMobBanner
 import com.burixer85.piscinamap.features.detail.presentation.DetailScreen
 import com.burixer85.piscinamap.features.detail.presentation.DetailViewModel
 import com.burixer85.piscinamap.features.explore.presentation.ExploreScreen
@@ -62,7 +64,7 @@ fun PiscinaMapNavGraph(
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
-                        bottomPadding = 140
+                        bottomPadding = 145
                     )
                 }
                 entry<ExploreRouteNav> {
@@ -71,7 +73,7 @@ fun PiscinaMapNavGraph(
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
-                        bottomPadding = 130
+                        bottomPadding = 150
                     )
                 }
                 entry<DetailRouteNav> { key ->
@@ -158,38 +160,42 @@ fun PiscinaMapNavGraph(
             exit = fadeOut(animationSpec = tween(200)),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                    selected = currentRoute is HomeRouteNav,
-                    onClick = {
-                        val existingHomeIndex = backStack.indexOfFirst { it is HomeRouteNav }
-                        if (existingHomeIndex != -1 && existingHomeIndex != backStack.lastIndex) {
-                            while (backStack.lastIndex > existingHomeIndex) {
-                                backStack.removeLastOrNull()
+            Column {
+                AdMobBanner()
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text("Home") },
+                        selected = currentRoute is HomeRouteNav,
+                        onClick = {
+                            val existingHomeIndex = backStack.indexOfFirst { it is HomeRouteNav }
+                            if (existingHomeIndex != -1 && existingHomeIndex != backStack.lastIndex) {
+                                while (backStack.lastIndex > existingHomeIndex) {
+                                    backStack.removeLastOrNull()
+                                }
                             }
                         }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Place, contentDescription = "Explorar") },
-                    label = { Text("Explorar") },
-                    selected = currentRoute is ExploreRouteNav,
-                    onClick = {
-                        val existingExploreIndex = backStack.indexOfFirst { it is ExploreRouteNav }
-                        if (existingExploreIndex != -1 && existingExploreIndex != backStack.lastIndex) {
-                            while (backStack.lastIndex > existingExploreIndex) {
-                                backStack.removeLastOrNull()
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Place, contentDescription = "Explorar") },
+                        label = { Text("Explorar") },
+                        selected = currentRoute is ExploreRouteNav,
+                        onClick = {
+                            val existingExploreIndex =
+                                backStack.indexOfFirst { it is ExploreRouteNav }
+                            if (existingExploreIndex != -1 && existingExploreIndex != backStack.lastIndex) {
+                                while (backStack.lastIndex > existingExploreIndex) {
+                                    backStack.removeLastOrNull()
+                                }
+                            } else if (existingExploreIndex == -1) {
+                                backStack.add(ExploreRouteNav)
                             }
-                        } else if (existingExploreIndex == -1) {
-                            backStack.add(ExploreRouteNav)
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

@@ -49,6 +49,12 @@ android {
             "\"${localProperties.getProperty("admob.interstitial.id")}\""
         )
 
+        buildConfigField(
+            "String",
+            "ADMOB_BANNER_ID",
+            "\"${localProperties.getProperty("admob.banner.id")}\""
+        )
+
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
         manifestPlaceholders["admobAppId"] = "${localProperties.getProperty("admob.app.id")}"
 
