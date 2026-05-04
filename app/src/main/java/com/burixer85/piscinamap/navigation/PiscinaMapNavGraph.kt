@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,6 +38,8 @@ import com.burixer85.piscinamap.features.detail.presentation.DetailScreen
 import com.burixer85.piscinamap.features.detail.presentation.DetailViewModel
 import com.burixer85.piscinamap.features.explore.presentation.ExploreScreen
 import com.burixer85.piscinamap.features.home.presentation.HomeScreen
+import com.burixer85.piscinamap.features.home.presentation.HomeViewModel
+import com.burixer85.piscinamap.core.presentation.util.ViewModelHolder
 
 @Composable
 fun PiscinaMapNavGraph(
@@ -59,7 +62,11 @@ fun PiscinaMapNavGraph(
             },
             entryProvider = entryProvider {
                 entry<HomeRouteNav> {
+                    val vm = ViewModelHolder.homeViewModel ?: viewModel<HomeViewModel>().also {
+                        ViewModelHolder.homeViewModel = it
+                    }
                     HomeScreen(
+                        viewModel = vm,
                         onNavigateToDetail = { poolId ->
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))

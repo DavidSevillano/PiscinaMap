@@ -1,10 +1,8 @@
 package com.burixer85.piscinamap.core.presentation.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -53,18 +50,17 @@ fun PoolSearchBar(
     onPredictionClick: (AutocompletePrediction) -> Unit,
     onClearSearch: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val placeholderText = getString(context, R.string.search_pools_or_areas)
     val clearText = getString(context, R.string.clear)
 
     Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 8.dp
-        ) {
-            Column(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 8.dp
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -155,17 +151,24 @@ fun PoolSearchBar(
                                 .clickable { onPredictionClick(prediction) }
                                 .padding(vertical = 12.dp, horizontal = 8.dp)
                         ) {
-                            Text(
-                                text = prediction.getPrimaryText(null).toString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = prediction.getSecondaryText(null).toString(),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            val primaryText = prediction.getPrimaryText(null)
+                            val secondaryText = prediction.getSecondaryText(null)
+
+                            if (primaryText != null) {
+                                Text(
+                                    text = primaryText.toString(),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            if (secondaryText != null) {
+                                Text(
+                                    text = secondaryText.toString(),
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                         HorizontalDivider(
                             thickness = 0.5.dp,

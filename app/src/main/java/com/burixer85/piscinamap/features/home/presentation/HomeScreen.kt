@@ -163,13 +163,13 @@ fun HomeScreen(
                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
 
                 uiState.pools.forEach { pool ->
-                    val isSelected by remember(selectedPool, pool.id) {
+                    val isSelected by remember(selectedPool, pool.id, pool.isHidden) {
                         derivedStateOf { selectedPool?.id == pool.id }
                     }
 
                     val icon = when {
-                        pool.isHidden -> poolIconHidden
                         isSelected -> poolIconSelected
+                        pool.isHidden -> poolIconHidden
                         pool.isNew -> poolIconHighlighted
                         else -> poolIconNormal
                     }

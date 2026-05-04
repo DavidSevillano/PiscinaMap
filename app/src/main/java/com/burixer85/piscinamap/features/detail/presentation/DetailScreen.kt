@@ -1,7 +1,6 @@
 package com.burixer85.piscinamap.features.detail.presentation
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
@@ -40,6 +40,7 @@ import com.burixer85.piscinamap.core.presentation.components.PoolDetailContent
 import com.burixer85.piscinamap.core.presentation.components.ShimmerPlaceholder
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
+import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -48,7 +49,6 @@ import kotlinx.coroutines.launch
 fun DetailScreen(
     poolId: String,
     onBack: () -> Unit,
-    onHiddenStateChanged: ((String, Boolean) -> Unit)? = null,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,7 +91,7 @@ fun DetailScreen(
                                             delay(100)
                                             HiddenPoolsManager.showPool(context, poolId)
                                             isHidden = false
-                                            onHiddenStateChanged?.invoke(poolId, false)
+                                            PoolStateManager.emitHiddenStateChange(poolId, false)
                                         }
                                     },
                                     leadingIcon = {
@@ -107,7 +107,7 @@ fun DetailScreen(
                                             delay(100)
                                             HiddenPoolsManager.hidePool(context, poolId)
                                             isHidden = true
-                                            onHiddenStateChanged?.invoke(poolId, true)
+                                            PoolStateManager.emitHiddenStateChange(poolId, true)
                                         }
                                     }
                                 )
@@ -151,7 +151,7 @@ fun DetailScreen(
                         PoolDetailContent(
                             pool = poolToShow,
                             onCallClick = { phone ->
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                val intent = Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
                                 context.startActivity(intent)
                             }
                         )

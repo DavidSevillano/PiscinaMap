@@ -10,6 +10,8 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Size
 import com.burixer85.piscinamap.core.domain.model.Pool
+import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
+import com.burixer85.piscinamap.core.presentation.util.ViewModelHolder
 import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
 import com.burixer85.piscinamap.features.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
@@ -45,6 +48,23 @@ class HomeViewModel @Inject constructor(
     private var sessionToken: AutocompleteSessionToken? = null
 
     private var lastMoveTime = 0L
+
+    private val hiddenStateListener: (String, Boolean) -> Unit = { poolId, isHidden ->
+        Log.d("HomeViewModel", "Received hidden state change: poolId=$poolId, isHidden=$isHidden")
+        updatePoolHiddenState(poolId, isHidden)
+    }
+
+    init {
+        if (ViewModelHolder.homeViewModel == null) {
+            ViewModelHolder.homeViewModel = this
+        }
+        PoolStateManager.subscribe(hiddenStateListener)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        PoolStateManager.unsubscribe(hiddenStateListener)
+    }
 
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
         val currentTime = System.currentTimeMillis()
@@ -102,44 +122,55 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, errorMessage = null, showSearchButton = false) }
 
         viewModelScope.launch {
-            val result = getNearbyPoolsUseCase(latitude, longitude)
-
-            result.fold(
-                onSuccess = { incomingPools ->
-                    preloadPoolImages(context, incomingPools)
-
-                    val currentPoolIds = _uiState.value.pools.map { it.id }.toSet()
-
-                    val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
-
-                    if (isManual) {
-                        val message = if (realNewPools.isNotEmpty()) {
-                            "¡Se han encontrado ${realNewPools.size} nuevas piscinas!"
-                        } else {
-                            "No hay piscinas nuevas en esta zona"
-                        }
-                        _events.send(HomeEvent.ShowToast(message))
-                    }
-
-                    lastSearchLocation = newLocation
-
-                    _uiState.update { currentState ->
-                        val finalPools = if (isManual) {
-                            val oldPools = currentState.pools.map { it.copy(isNew = false) }
-                            val newPools = incomingPools.map { pool ->
-                                pool.copy(isNew = pool.id !in currentPoolIds)
-                            }
-                            (oldPools + newPools).distinctBy { it.id }
-                        } else {
-                            incomingPools.map { it.copy(isNew = false) }
-                        }
-                        currentState.copy(pools = finalPools, isLoading = false)
-                    }
-                },
-                onFailure = { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+            try {
+                val result = withTimeout(30_000) {
+                    getNearbyPoolsUseCase(latitude, longitude)
                 }
-            )
+
+                result.fold(
+                    onSuccess = { incomingPools ->
+                        preloadPoolImages(context, incomingPools)
+
+                        val currentPoolIds = _uiState.value.pools.map { it.id }.toSet()
+
+                        val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
+
+                        if (isManual) {
+                            val message = if (realNewPools.isNotEmpty()) {
+                                "¡Se han encontrado ${realNewPools.size} nuevas piscinas!"
+                            } else {
+                                "No hay piscinas nuevas en esta zona"
+                            }
+                            _events.send(HomeEvent.ShowToast(message))
+                        }
+
+                        lastSearchLocation = newLocation
+
+                        _uiState.update { currentState ->
+                            val finalPools = if (isManual) {
+                                val oldPools = currentState.pools.map { it.copy(isNew = false) }
+                                val newPools = incomingPools.map { pool ->
+                                    pool.copy(isNew = pool.id !in currentPoolIds)
+                                }
+                                (oldPools + newPools).distinctBy { it.id }
+                            } else {
+                                incomingPools.map { it.copy(isNew = false) }
+                            }
+                            currentState.copy(pools = finalPools, isLoading = false)
+                        }
+                    },
+                    onFailure = { error ->
+                        _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    }
+                )
+            } catch (e: Exception) {
+                val errorMessage = when (e) {
+                    is kotlinx.coroutines.TimeoutCancellationException -> "Tiempo de espera agotado"
+                    else -> e.message ?: "Error desconocido"
+                }
+                _uiState.update { it.copy(isLoading = false, errorMessage = errorMessage) }
+                Log.e("POOLS", "Error fetching pools: ${e.message}")
+            }
         }
     }
 
