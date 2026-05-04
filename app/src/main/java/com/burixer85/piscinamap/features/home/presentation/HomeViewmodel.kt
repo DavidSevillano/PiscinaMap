@@ -55,9 +55,6 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
-        if (ViewModelHolder.homeViewModel == null) {
-            ViewModelHolder.homeViewModel = this
-        }
         PoolStateManager.subscribe(hiddenStateListener)
     }
 
@@ -232,17 +229,27 @@ class HomeViewModel @Inject constructor(
 
         if (sessionToken == null) sessionToken = AutocompleteSessionToken.newInstance()
 
-        val placesClient = Places.createClient(context)
-        val request = FindAutocompletePredictionsRequest.builder()
-            .setSessionToken(sessionToken)
-            .setQuery(newText)
-            .build()
+        val applicationContext = context.applicationContext
+        if (applicationContext == null) {
+            Log.w("PLACES", "Application context is null")
+            return
+        }
 
-        placesClient.findAutocompletePredictions(request)
-            .addOnSuccessListener { response ->
-                _uiState.update { it.copy(predictions = response.autocompletePredictions) }
-            }
-            .addOnFailureListener { e -> Log.e("PLACES", "Error: ${e.message}") }
+        try {
+            val placesClient = Places.createClient(applicationContext)
+            val request = FindAutocompletePredictionsRequest.builder()
+                .setSessionToken(sessionToken)
+                .setQuery(newText)
+                .build()
+
+            placesClient.findAutocompletePredictions(request)
+                .addOnSuccessListener { response ->
+                    _uiState.update { it.copy(predictions = response.autocompletePredictions) }
+                }
+                .addOnFailureListener { e -> Log.e("PLACES", "Error: ${e.message}") }
+        } catch (e: Exception) {
+            Log.e("PLACES", "Exception creating places client: ${e.message}")
+        }
     }
 
     fun onMarkerClicked(poolId: String) {

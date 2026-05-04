@@ -39,7 +39,6 @@ import com.burixer85.piscinamap.features.detail.presentation.DetailViewModel
 import com.burixer85.piscinamap.features.explore.presentation.ExploreScreen
 import com.burixer85.piscinamap.features.home.presentation.HomeScreen
 import com.burixer85.piscinamap.features.home.presentation.HomeViewModel
-import com.burixer85.piscinamap.core.presentation.util.ViewModelHolder
 
 @Composable
 fun PiscinaMapNavGraph(
@@ -62,11 +61,7 @@ fun PiscinaMapNavGraph(
             },
             entryProvider = entryProvider {
                 entry<HomeRouteNav> {
-                    val vm = ViewModelHolder.homeViewModel ?: viewModel<HomeViewModel>().also {
-                        ViewModelHolder.homeViewModel = it
-                    }
                     HomeScreen(
-                        viewModel = vm,
                         onNavigateToDetail = { poolId ->
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))

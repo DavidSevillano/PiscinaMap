@@ -2,22 +2,25 @@ package com.burixer85.piscinamap.features.home.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
@@ -80,6 +88,8 @@ fun HomeScreen(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
 
+    var snackbarMessage by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -93,13 +103,16 @@ fun HomeScreen(
                 }
 
                 is HomeEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message,
-                        if (event.isLong) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
-                    ).show()
+                    snackbarMessage = event.message
                 }
             }
+        }
+    }
+
+    LaunchedEffect(snackbarMessage) {
+        if (snackbarMessage != null) {
+            kotlinx.coroutines.delay(3000)
+            snackbarMessage = null
         }
     }
 
@@ -108,7 +121,7 @@ fun HomeScreen(
     }
 
     @SuppressLint("MissingPermission")
-    LaunchedEffect(locationPermissionState.status.isGranted) {
+    LaunchedEffect(Unit) {
         if (poolIconNormal == null) {
             poolIconNormal = bitmapDescriptorFromVector(context, R.drawable.poolmark, size = 150)
             poolIconHighlighted =
@@ -116,8 +129,6 @@ fun HomeScreen(
             poolIconHidden =
                 bitmapDescriptorFromVector(context, R.drawable.poolmark_hidden, size = 150)
         }
-
-        if (uiState.pools.isNotEmpty()) return@LaunchedEffect
 
         if (locationPermissionState.status.isGranted) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -192,10 +203,12 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .background(MaterialTheme.colorScheme.surface))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+            )
             PoolSearchBar(
                 searchText = uiState.searchText,
                 predictions = uiState.predictions,
@@ -280,6 +293,47 @@ fun HomeScreen(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 16.dp)
             )
+        }
+
+        if (snackbarMessage != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(2f),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-220).dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.highlighted_poolmark),
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                            text = snackbarMessage ?: "",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
