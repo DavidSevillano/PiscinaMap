@@ -1,10 +1,12 @@
 package com.burixer85.piscinamap
 
+import android.animation.ObjectAnimator
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.burixer85.piscinamap.navigation.PiscinaMapNavGraph
 import com.burixer85.piscinamap.ui.theme.PiscinaMapTheme
@@ -35,6 +38,20 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val fadeOut = ObjectAnimator.ofFloat(
+                splashScreenViewProvider.view,
+                "alpha",
+                1f,
+                0f
+            )
+            fadeOut.duration = 500
+            fadeOut.interpolator = AccelerateDecelerateInterpolator()
+            fadeOut.start()
+        }
+
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
