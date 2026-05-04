@@ -30,6 +30,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +81,7 @@ fun HomeScreen(
 
     val cameraPositionState = rememberCameraPositionState()
     val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
 
     var selectedPool by remember { mutableStateOf<Pool?>(null) }
     var lastSelectedPool by remember { mutableStateOf<Pool?>(null) }
@@ -125,7 +129,7 @@ fun HomeScreen(
     }
 
     @SuppressLint("MissingPermission")
-    LaunchedEffect(Unit) {
+    LaunchedEffect(locationPermissionState.status.isGranted) {
         if (poolIconNormal == null) {
             poolIconNormal = bitmapDescriptorFromVector(context, R.drawable.poolmark, size = 150)
             poolIconHighlighted =
@@ -140,7 +144,12 @@ fun HomeScreen(
                 location?.let {
                     val userLatLng = LatLng(it.latitude, it.longitude)
 
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                    coroutineScope.launch {
+                        cameraPositionState.animate(
+                            CameraUpdateFactory.newLatLngZoom(userLatLng, 15f),
+                            durationMs = 1000
+                        )
+                    }
                     viewModel.fetchPools(it.latitude, it.longitude, context = context)
                 }
             }

@@ -78,4 +78,7 @@
     <string name="search_more">Search more</string>
     <string name="more_options">More options</string>
     <string name="no_new_pools">No new pools in this area</string>
+    <string name="timeout_error">Timeout</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="no_more_pools_area">No more pools found in this area</string>
 </resources>

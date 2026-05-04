@@ -27,14 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.gms.ads.nativead.MediaView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Button
 
 @Composable
 fun NativeAdCard(
     modifier: Modifier = Modifier,
-    nativeAd: NativeAd? = null
+    nativeAd: NativeAd? = null,
+    ctaText: String? = null
 ) {
     val context = LocalContext.current
-    Log.d("ADMOB", "NativeAdCard called with nativeAd: ${nativeAd != null}")
 
     if (nativeAd != null) {
         AndroidView(
@@ -52,8 +56,8 @@ fun NativeAdCard(
                     )
                 }
 
-                val container = android.widget.LinearLayout(ctx).apply {
-                    orientation = android.widget.LinearLayout.HORIZONTAL
+                val container = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.HORIZONTAL
                     setPadding(16, 16, 16, 16)
                     gravity = android.view.Gravity.CENTER_VERTICAL
                     layoutParams = ViewGroup.LayoutParams(
@@ -62,14 +66,14 @@ fun NativeAdCard(
                     )
                 }
 
-                val imageContainer = android.widget.LinearLayout(ctx).apply {
-                    layoutParams = android.widget.LinearLayout.LayoutParams(240, 240)
+                val imageContainer = LinearLayout(ctx).apply {
+                    layoutParams = LinearLayout.LayoutParams(240, 240)
                 }
 
-                val mediaView = com.google.android.gms.ads.nativead.MediaView(ctx).apply {
-                    layoutParams = android.widget.LinearLayout.LayoutParams(
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                val mediaView = MediaView(ctx).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT
                     )
                 }
 
@@ -78,11 +82,11 @@ fun NativeAdCard(
                     cornerRadius = 24f
                 }
 
-                val textContainer = android.widget.LinearLayout(ctx).apply {
-                    orientation = android.widget.LinearLayout.VERTICAL
-                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                val textContainer = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
                         0,
-                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
                         1f
                     ).apply {
                         marginStart = 24
@@ -90,22 +94,22 @@ fun NativeAdCard(
                     gravity = android.view.Gravity.CENTER_VERTICAL
                 }
 
-                val headlineView = android.widget.TextView(ctx).apply {
+                val headlineView = TextView(ctx).apply {
                     textSize = 16f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(0xFF1A2F4F.toInt())
                     maxLines = 1
                 }
 
-                val bodyView = android.widget.TextView(ctx).apply {
+                val bodyView = TextView(ctx).apply {
                     textSize = 14f
                     setTextColor(0xFF666666.toInt())
                     maxLines = 1
                     setPadding(0, 8, 0, 0)
                 }
 
-                val ctaButton = android.widget.Button(ctx).apply {
-                    text = nativeAd.callToAction ?: "Ver más"
+                val ctaButton = Button(ctx).apply {
+                    text = nativeAd.callToAction ?: ctaText ?: "See more"
                     setTextColor(0xFF4CAF50.toInt())
                     textSize = 11f
                     setPadding(0, 8, 0, 0)
@@ -128,9 +132,9 @@ fun NativeAdCard(
                 adView.callToActionView = ctaButton
                 adView.mediaView = mediaView
 
-                (adView.headlineView as? android.widget.TextView)?.text = nativeAd.headline
-                (adView.bodyView as? android.widget.TextView)?.text = nativeAd.body
-                (adView.callToActionView as? android.widget.Button)?.text = nativeAd.callToAction
+                (adView.headlineView as? TextView)?.text = nativeAd.headline
+                (adView.bodyView as? TextView)?.text = nativeAd.body
+                (adView.callToActionView as? Button)?.text = nativeAd.callToAction
 
                 adView.mediaView?.setMediaContent(nativeAd.mediaContent)
 
@@ -138,6 +142,13 @@ fun NativeAdCard(
                 adView
             },
             modifier = modifier.fillMaxWidth(),
+            update = { adView ->
+                (adView.headlineView as? TextView)?.text = nativeAd.headline
+                (adView.bodyView as? TextView)?.text = nativeAd.body
+                (adView.callToActionView as? Button)?.text = nativeAd.callToAction
+                adView.mediaView?.setMediaContent(nativeAd.mediaContent)
+                adView.setNativeAd(nativeAd)
+            },
             onRelease = { it.destroy() }
         )
     } else {

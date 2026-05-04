@@ -50,7 +50,6 @@ class HomeViewModel @Inject constructor(
     private var lastMoveTime = 0L
 
     private val hiddenStateListener: (String, Boolean) -> Unit = { poolId, isHidden ->
-        Log.d("HomeViewModel", "Received hidden state change: poolId=$poolId, isHidden=$isHidden")
         updatePoolHiddenState(poolId, isHidden)
     }
 
@@ -161,7 +160,6 @@ class HomeViewModel @Inject constructor(
                     else -> e.message ?: "Error desconocido"
                 }
                 _uiState.update { it.copy(isLoading = false, errorMessage = errorMessage) }
-                Log.e("POOLS", "Error fetching pools: ${e.message}")
             }
         }
     }
@@ -226,7 +224,6 @@ class HomeViewModel @Inject constructor(
 
         val applicationContext = context.applicationContext
         if (applicationContext == null) {
-            Log.w("PLACES", "Application context is null")
             return
         }
 
@@ -241,9 +238,7 @@ class HomeViewModel @Inject constructor(
                 .addOnSuccessListener { response ->
                     _uiState.update { it.copy(predictions = response.autocompletePredictions) }
                 }
-                .addOnFailureListener { e -> Log.e("PLACES", "Error: ${e.message}") }
         } catch (e: Exception) {
-            Log.e("PLACES", "Exception creating places client: ${e.message}")
         }
     }
 

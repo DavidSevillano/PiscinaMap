@@ -2,7 +2,6 @@ package com.burixer85.piscinamap.features.explore.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.components.NativeAdCard
 import com.burixer85.piscinamap.core.presentation.components.PoolListCard
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
@@ -57,7 +56,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay as delaySuspend
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -69,53 +68,45 @@ fun ExploreScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
-    var adLoaded by remember { mutableStateOf(false) }
-    var adFailed by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val nativeId = if (BuildConfig.USE_TEST_ADS) {
-            "ca-app-pub-3940256099942544/2247696110"
-        } else {
-            BuildConfig.ADMOB_NATIVE_ID
-        }
-        Log.d("ADMOB", "Loading native ad with ID: $nativeId, USE_TEST_ADS: ${BuildConfig.USE_TEST_ADS}")
-
-        try {
-            val adLoader = AdLoader.Builder(context, nativeId)
-                .forNativeAd { ad ->
-                    nativeAd = ad
-                    adLoaded = true
-                    Log.d("ADMOB", "Native ad loaded successfully")
-                }
-                .withAdListener(object : AdListener() {
-                    override fun onAdFailedToLoad(adError: LoadAdError) {
-                        Log.e("ADMOB", "Native ad failed to load: ${adError.message}")
-                        adFailed = true
-                    }
-                    override fun onAdLoaded() {
-                        Log.d("ADMOB", "Native ad loaded callback")
-                    }
-                })
-                .build()
-
-            val adRequest = AdRequest.Builder().build()
-            adLoader.loadAd(adRequest)
-
-            delaySuspend(8000)
-            if (!adLoaded && !adFailed) {
-                Log.w("ADMOB", "Native ad timeout after 8 seconds")
-                adFailed = true
-            }
-        } catch (e: Exception) {
-            Log.e("ADMOB", "Error loading native ad: ${e.message}")
-            adFailed = true
-        }
-    }
+    var nativeAdList by remember { mutableStateOf<List<NativeAd>>(emptyList()) }
+    var locationPermissionDecided by remember { mutableStateOf(false) }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
+
+    LaunchedEffect(locationPermissionState.status) {
+        delay(500)
+        locationPermissionDecided = true
+    }
+
+    val nativeId = if (BuildConfig.USE_TEST_ADS) {
+        "ca-app-pub-3940256099942544/2247696110"
+    } else {
+        BuildConfig.ADMOB_NATIVE_ID
+    }
+
+    LaunchedEffect(uiState.pools, locationPermissionDecided) {
+        if (uiState.pools.isEmpty()) return@LaunchedEffect
+        if (nativeAdList.isNotEmpty()) return@LaunchedEffect
+        if (!locationPermissionDecided) return@LaunchedEffect
+
+        try {
+            val adLoader = AdLoader.Builder(context, nativeId)
+                .forNativeAd { ad ->
+                    nativeAdList = nativeAdList + ad
+                }
+                .withAdListener(object : AdListener() {
+                    override fun onAdFailedToLoad(adError: LoadAdError) {
+                    }
+                })
+                .build()
+
+            adLoader.loadAds(AdRequest.Builder().build(), 5)
+        } catch (e: Exception) {
+        }
+    }
 
     var initialLocationObtained by remember { mutableStateOf(false) }
 
@@ -213,24 +204,42 @@ fun ExploreScreen(
                             !HiddenPoolsManager.isHidden(context, pool.id)
                         }
 
+                        var totalPoolsAdShown = 0
+
                         val itemList = buildList {
-                            var poolCount = 0
+                            var totalPools = 0
                             visiblePools.forEachIndexed { index, pool ->
                                 add(pool)
-                                poolCount++
-                                if (poolCount == 2 && visiblePools.size > 2) {
-                                    add("ad")
-                                    poolCount = 0
+                                totalPools++
+
+                                val adPosition = 2 + (totalPoolsAdShown * 4)
+                                if (totalPools == adPosition && totalPools >= 2) {
+                                    add(totalPoolsAdShown)
+                                    totalPoolsAdShown++
                                 }
                             }
                         }
 
                         items(itemList.size) { index ->
                             val item = itemList[index]
-                            if (item is com.burixer85.piscinamap.core.domain.model.Pool) {
-                                PoolListCard(pool = item, onNavigateToDetail = onNavigateToDetail)
-                            } else {
-                                NativeAdCard(nativeAd = nativeAd)
+                            when (item) {
+                                is Pool -> {
+                                    PoolListCard(
+                                        pool = item,
+                                        onNavigateToDetail = onNavigateToDetail
+                                    )
+                                }
+
+                                is Int -> {
+                                    val adIndex =
+                                        if (nativeAdList.isNotEmpty()) item % nativeAdList.size else 0
+                                    val adForPosition = nativeAdList.getOrNull(adIndex)
+                                        ?: nativeAdList.firstOrNull()
+                                    NativeAdCard(
+                                        nativeAd = adForPosition,
+                                        ctaText = stringResource(R.string.see_more)
+                                    )
+                                }
                             }
                         }
 

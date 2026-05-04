@@ -26,7 +26,6 @@ class DetailRepositoryImpl @Inject constructor(
 
             Result.success(pool)
         } catch (e: Exception) {
-            Log.e("POOL_DETAILS", "Error al obtener detalles: ${e.message}")
             Result.failure(e)
         }
     }

@@ -78,4 +78,7 @@
     <string name="search_more">Buscar más piscinas</string>
     <string name="more_options">Más opciones</string>
     <string name="no_new_pools">No hay piscinas nuevas en esta zona</string>
+    <string name="timeout_error">Tiempo de espera agotado</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="no_more_pools_area">No se encontraron más piscinas en esta zona</string>
 </resources>

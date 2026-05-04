@@ -30,26 +30,20 @@ class PoolRepositoryImpl @Inject constructor(
 
             when (response.status) {
                 "REQUEST_DENIED" -> {
-                    Log.e("POOLS", "API request denied - check API key")
                     return Result.failure(Exception("Error de API: Solicitud denegada"))
                 }
                 "OVER_QUERY_LIMIT" -> {
-                    Log.e("POOLS", "API quota exceeded")
                     return Result.failure(Exception("Cuota de API excedida"))
                 }
                 "INVALID_REQUEST" -> {
-                    Log.e("POOLS", "Invalid request")
                     return Result.failure(Exception("Solicitud inválida"))
                 }
                 "UNKNOWN_ERROR" -> {
-                    Log.e("POOLS", "Server error")
                     return Result.failure(Exception("Error del servidor"))
                 }
                 "ZERO_RESULTS", "OK" -> {
-                    // Continue processing
                 }
                 else -> {
-                    Log.w("POOLS", "Unknown status: ${response.status}")
                 }
             }
 
@@ -82,14 +76,8 @@ class PoolRepositoryImpl @Inject constructor(
                     place.toDomain().copy(isHidden = isHidden)
                 }
 
-            Log.d("POOLS", "Filter result: ${pools.size} pools")
-            response.results.take(3).forEach { place ->
-                Log.d("POOLS", "Types: ${place.types} - ${place.name}")
-            }
-
             Result.success(pools)
         } catch (e: Exception) {
-            Log.e("DEBUG_MAPA", "Error al conectar con Google: ${e.message}")
             Result.failure(e)
         }
     }
@@ -108,7 +96,6 @@ class PoolRepositoryImpl @Inject constructor(
 
             Result.success(pool)
         } catch (e: Exception) {
-            Log.e("POOL_DETAILS", "Error al obtener detalles: ${e.message}")
             Result.failure(e)
         }
     }

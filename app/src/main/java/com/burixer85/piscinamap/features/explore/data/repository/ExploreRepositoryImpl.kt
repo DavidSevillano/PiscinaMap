@@ -57,11 +57,8 @@ class ExploreRepositoryImpl @Inject constructor(
                     place.toDomain().copy(isHidden = isHidden)
                 }
 
-            Log.d("EXPLORE", "Filter result: ${pools.size} pools")
-
             Result.success(pools)
         } catch (e: Exception) {
-            Log.e("EXPLORE", "Error al conectar con Google: ${e.message}")
             Result.failure(e)
         }
     }
