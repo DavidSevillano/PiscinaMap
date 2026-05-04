@@ -1,6 +1,8 @@
 package com.burixer85.piscinamap.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.res.stringResource
+import com.burixer85.piscinamap.R
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -169,8 +171,8 @@ fun PiscinaMapNavGraph(
                     tonalElevation = 8.dp
                 ) {
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                        label = { Text("Home") },
+                        icon = { Icon(Icons.Default.Home, contentDescription = stringResource(R.string.explore)) },
+                        label = { Text(stringResource(R.string.explore)) },
                         selected = currentRoute is HomeRouteNav,
                         onClick = {
                             val existingHomeIndex = backStack.indexOfFirst { it is HomeRouteNav }
@@ -182,8 +184,8 @@ fun PiscinaMapNavGraph(
                         }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Place, contentDescription = "Explorar") },
-                        label = { Text("Explorar") },
+                        icon = { Icon(Icons.Default.Place, contentDescription = stringResource(R.string.explore)) },
+                        label = { Text(stringResource(R.string.explore)) },
                         selected = currentRoute is ExploreRouteNav,
                         onClick = {
                             val existingExploreIndex =

@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,10 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
+
+private const val USE_MOCK_LOCATION = true
+private val MOCK_LOCATION = LatLng(30.2672, -97.7431) // Austin, Texas
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -93,7 +98,10 @@ fun ExploreScreen(
 
     @SuppressLint("MissingPermission")
     LaunchedEffect(locationPermissionState.status.isGranted, uiState.pools.isEmpty()) {
-        if (locationPermissionState.status.isGranted && !initialLocationObtained && uiState.pools.isEmpty()) {
+        if (USE_MOCK_LOCATION && !initialLocationObtained && uiState.pools.isEmpty()) {
+            viewModel.fetchPools(MOCK_LOCATION.latitude, MOCK_LOCATION.longitude)
+            initialLocationObtained = true
+        } else if (locationPermissionState.status.isGranted && !initialLocationObtained && uiState.pools.isEmpty()) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
@@ -130,7 +138,7 @@ fun ExploreScreen(
 
             uiState.pools.isEmpty() -> {
                 Text(
-                    text = "No se encontraron piscinas cercanas",
+                    text = stringResource(R.string.no_pools_in_this_area),
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -226,7 +234,7 @@ fun ExploreScreen(
                                         Button(
                                             onClick = { viewModel.fetchMorePools() }
                                         ) {
-                                            Text("Buscar más piscinas")
+                                            Text(stringResource(R.string.search_more))
                                         }
                                     }
                                 }

@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ fun PoolDetailCard(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(R.drawable.ic_pool_placeholder)
                         .build(),
-                    contentDescription = "Sin foto disponible",
+                    contentDescription = stringResource(R.string.no_photo_available),
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(6.dp)),
@@ -119,7 +120,7 @@ fun PoolDetailCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = " ${pool.rating ?: "N/A"}",
+                        text = " ${pool.rating ?: stringResource(R.string.na)}",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -132,9 +133,9 @@ fun PoolDetailCard(
                     )
 
                     val statusText = when (pool.isOpenNow) {
-                        true -> "Abierto"
-                        false -> "Cerrado"
-                        null -> "Sin horario."
+                        true -> stringResource(R.string.open)
+                        false -> stringResource(R.string.closed)
+                        null -> stringResource(R.string.no_schedule_dot)
                     }
 
                     val statusColor = when (pool.isOpenNow) {
@@ -167,7 +168,7 @@ fun PoolDetailCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Cerrar detalle",
+                    contentDescription = stringResource(R.string.close_detail),
                     tint = Color.Gray
                 )
             }

@@ -75,4 +75,7 @@
     <string name="lifeguard">Socorrista</string>
     <string name="water_slide">Tobogán</string>
     <string name="kids_pool">Piscina infantil</string>
+    <string name="search_more">Buscar más piscinas</string>
+    <string name="more_options">Más opciones</string>
+    <string name="no_new_pools">No hay piscinas nuevas en esta zona</string>
 </resources>

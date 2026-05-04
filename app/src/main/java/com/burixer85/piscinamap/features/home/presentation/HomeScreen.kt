@@ -103,7 +103,11 @@ fun HomeScreen(
                 }
 
                 is HomeEvent.ShowToast -> {
-                    snackbarMessage = event.message
+                    snackbarMessage = if (event.newPoolsCount > 0) {
+                        context.getString(R.string.new_pools_found, event.newPoolsCount)
+                    } else {
+                        context.getString(R.string.no_new_pools)
+                    }
                 }
             }
         }

@@ -133,12 +133,7 @@ class HomeViewModel @Inject constructor(
                         val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
 
                         if (isManual) {
-                            val message = if (realNewPools.isNotEmpty()) {
-                                "¡Se han encontrado ${realNewPools.size} nuevas piscinas!"
-                            } else {
-                                "No hay piscinas nuevas en esta zona"
-                            }
-                            _events.send(HomeEvent.ShowToast(message))
+                            _events.send(HomeEvent.ShowToast(realNewPools.size))
                         }
 
                         lastSearchLocation = newLocation
@@ -304,5 +299,5 @@ data class MapUiState(
 
 sealed class HomeEvent {
     data class AnimateToLocation(val latLng: LatLng) : HomeEvent()
-    data class ShowToast(val message: String, val isLong: Boolean = false) : HomeEvent()
+    data class ShowToast(val newPoolsCount: Int, val isLong: Boolean = false) : HomeEvent()
 }

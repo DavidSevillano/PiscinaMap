@@ -75,4 +75,7 @@
     <string name="lifeguard">Lifeguard</string>
     <string name="water_slide">Water slide</string>
     <string name="kids_pool">Kids pool</string>
+    <string name="search_more">Search more</string>
+    <string name="more_options">More options</string>
+    <string name="no_new_pools">No new pools in this area</string>
 </resources>
