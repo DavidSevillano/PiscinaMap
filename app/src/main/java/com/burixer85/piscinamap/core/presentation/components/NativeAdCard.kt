@@ -1,5 +1,6 @@
 package com.burixer85.piscinamap.core.presentation.components
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.cardview.widget.CardView
 import androidx.compose.foundation.background
@@ -33,6 +34,7 @@ fun NativeAdCard(
     nativeAd: NativeAd? = null
 ) {
     val context = LocalContext.current
+    Log.d("ADMOB", "NativeAdCard called with nativeAd: ${nativeAd != null}")
 
     if (nativeAd != null) {
         AndroidView(
@@ -41,8 +43,8 @@ fun NativeAdCard(
 
                 val cardView = CardView(ctx).apply {
                     setCardBackgroundColor(android.graphics.Color.WHITE)
-                    radius = 40f
-                    cardElevation = 16f
+                    radius = 32f
+                    cardElevation = 4f
                     useCompatPadding = true
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -52,15 +54,28 @@ fun NativeAdCard(
 
                 val container = android.widget.LinearLayout(ctx).apply {
                     orientation = android.widget.LinearLayout.HORIZONTAL
-                    setPadding(32, 24, 32, 24)
+                    setPadding(16, 16, 16, 16)
+                    gravity = android.view.Gravity.CENTER_VERTICAL
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                     )
                 }
 
+                val imageContainer = android.widget.LinearLayout(ctx).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(240, 240)
+                }
+
                 val mediaView = com.google.android.gms.ads.nativead.MediaView(ctx).apply {
-                    layoutParams = android.widget.LinearLayout.LayoutParams(120, 120)
+                    layoutParams = android.widget.LinearLayout.LayoutParams(
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                }
+
+                imageContainer.setClipToOutline(true)
+                imageContainer.background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = 24f
                 }
 
                 val textContainer = android.widget.LinearLayout(ctx).apply {
@@ -70,7 +85,7 @@ fun NativeAdCard(
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                         1f
                     ).apply {
-                        marginStart = 32
+                        marginStart = 24
                     }
                     gravity = android.view.Gravity.CENTER_VERTICAL
                 }
@@ -101,7 +116,8 @@ fun NativeAdCard(
                 textContainer.addView(bodyView)
                 textContainer.addView(ctaButton)
 
-                container.addView(mediaView)
+                imageContainer.addView(mediaView)
+                container.addView(imageContainer)
                 container.addView(textContainer)
 
                 cardView.addView(container)

@@ -22,6 +22,15 @@ android {
         version = release(36)
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = localProperties.getProperty("keystore.path")?.let { file(it) }
+            storePassword = localProperties.getProperty("keystore.password")
+            keyAlias = localProperties.getProperty("key.alias")
+            keyPassword = localProperties.getProperty("key.password")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.burixer85.piscinamap"
         minSdk = 26
@@ -63,7 +72,7 @@ android {
         buildConfigField(
             "Boolean",
             "USE_TEST_ADS",
-            "true"
+            "false"
         )
 
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
@@ -80,12 +89,16 @@ android {
             )
         }
         release {
-            buildConfigField("String", "TEST_DEVICE_ID", "\"\"")
-            isMinifyEnabled = false
+            // 2. Asignar la firma a la variante de release
+            signingConfig = signingConfigs.getByName("release")
+
+            isMinifyEnabled = false // Cámbialo a true cuando vayas a subir a producción
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField("String", "TEST_DEVICE_ID", "\"\"")
         }
     }
     compileOptions {

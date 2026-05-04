@@ -2,6 +2,7 @@ package com.burixer85.piscinamap.features.explore.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,10 +57,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.LatLng
-
-private const val USE_MOCK_LOCATION = true
-private val MOCK_LOCATION = LatLng(30.2672, -97.7431) // Austin, Texas
+import kotlinx.coroutines.delay as delaySuspend
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -73,21 +71,46 @@ fun ExploreScreen(
 
     var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
     var adLoaded by remember { mutableStateOf(false) }
+    var adFailed by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val nativeId =
-            if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/2247696110" else com.burixer85.piscinamap.BuildConfig.ADMOB_NATIVE_ID
-        val adLoader = AdLoader.Builder(context, nativeId)
-            .forNativeAd { ad ->
-                nativeAd = ad
-                adLoaded = true
+        val nativeId = if (BuildConfig.USE_TEST_ADS) {
+            "ca-app-pub-3940256099942544/2247696110"
+        } else {
+            BuildConfig.ADMOB_NATIVE_ID
+        }
+        Log.d("ADMOB", "Loading native ad with ID: $nativeId, USE_TEST_ADS: ${BuildConfig.USE_TEST_ADS}")
+
+        try {
+            val adLoader = AdLoader.Builder(context, nativeId)
+                .forNativeAd { ad ->
+                    nativeAd = ad
+                    adLoaded = true
+                    Log.d("ADMOB", "Native ad loaded successfully")
+                }
+                .withAdListener(object : AdListener() {
+                    override fun onAdFailedToLoad(adError: LoadAdError) {
+                        Log.e("ADMOB", "Native ad failed to load: ${adError.message}")
+                        adFailed = true
+                    }
+                    override fun onAdLoaded() {
+                        Log.d("ADMOB", "Native ad loaded callback")
+                    }
+                })
+                .build()
+
+            val adRequest = AdRequest.Builder().build()
+            adLoader.loadAd(adRequest)
+
+            delaySuspend(8000)
+            if (!adLoaded && !adFailed) {
+                Log.w("ADMOB", "Native ad timeout after 8 seconds")
+                adFailed = true
             }
-            .withAdListener(object : AdListener() {
-                override fun onAdFailedToLoad(adError: LoadAdError) {}
-                override fun onAdLoaded() {}
-            })
-            .build()
-        adLoader.loadAds(AdRequest.Builder().build(), 1)
+        } catch (e: Exception) {
+            Log.e("ADMOB", "Error loading native ad: ${e.message}")
+            adFailed = true
+        }
     }
 
     val locationPermissionState = rememberPermissionState(
@@ -98,10 +121,7 @@ fun ExploreScreen(
 
     @SuppressLint("MissingPermission")
     LaunchedEffect(locationPermissionState.status.isGranted, uiState.pools.isEmpty()) {
-        if (USE_MOCK_LOCATION && !initialLocationObtained && uiState.pools.isEmpty()) {
-            viewModel.fetchPools(MOCK_LOCATION.latitude, MOCK_LOCATION.longitude)
-            initialLocationObtained = true
-        } else if (locationPermissionState.status.isGranted && !initialLocationObtained && uiState.pools.isEmpty()) {
+        if (locationPermissionState.status.isGranted && !initialLocationObtained && uiState.pools.isEmpty()) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
@@ -193,28 +213,24 @@ fun ExploreScreen(
                             !HiddenPoolsManager.isHidden(context, pool.id)
                         }
 
-                        if (visiblePools.size >= 2) {
-                            items(2) { index ->
-                                PoolListCard(
-                                    pool = visiblePools[index],
-                                    onNavigateToDetail = onNavigateToDetail
-                                )
+                        val itemList = buildList {
+                            var poolCount = 0
+                            visiblePools.forEachIndexed { index, pool ->
+                                add(pool)
+                                poolCount++
+                                if (poolCount == 2 && visiblePools.size > 2) {
+                                    add("ad")
+                                    poolCount = 0
+                                }
                             }
-                            item(key = "nativeAd") {
+                        }
+
+                        items(itemList.size) { index ->
+                            val item = itemList[index]
+                            if (item is com.burixer85.piscinamap.core.domain.model.Pool) {
+                                PoolListCard(pool = item, onNavigateToDetail = onNavigateToDetail)
+                            } else {
                                 NativeAdCard(nativeAd = nativeAd)
-                            }
-                            items(visiblePools.size - 2) { index ->
-                                PoolListCard(
-                                    pool = visiblePools[index + 2],
-                                    onNavigateToDetail = onNavigateToDetail
-                                )
-                            }
-                        } else {
-                            items(visiblePools) { pool ->
-                                PoolListCard(
-                                    pool = pool,
-                                    onNavigateToDetail = onNavigateToDetail
-                                )
                             }
                         }
 
