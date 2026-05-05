@@ -132,7 +132,14 @@ class HomeViewModel @Inject constructor(
                         val realNewPools = incomingPools.filter { it.id !in currentPoolIds }
 
                         if (isManual) {
-                            _events.send(HomeEvent.ShowToast(realNewPools.size))
+                            val centerLatLng = if (realNewPools.isNotEmpty()) {
+                                val avgLat = realNewPools.map { it.latitude }.average()
+                                val avgLng = realNewPools.map { it.longitude }.average()
+                                LatLng(avgLat, avgLng)
+                            } else {
+                                newLocation
+                            }
+                            _events.send(HomeEvent.ShowToast(realNewPools.size, centerLatLng))
                         }
 
                         lastSearchLocation = newLocation
@@ -294,5 +301,5 @@ data class MapUiState(
 
 sealed class HomeEvent {
     data class AnimateToLocation(val latLng: LatLng) : HomeEvent()
-    data class ShowToast(val newPoolsCount: Int, val isLong: Boolean = false) : HomeEvent()
+    data class ShowToast(val newPoolsCount: Int, val centerLatLng: LatLng? = null) : HomeEvent()
 }

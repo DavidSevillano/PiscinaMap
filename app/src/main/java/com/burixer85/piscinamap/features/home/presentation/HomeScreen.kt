@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,8 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,14 +59,15 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -93,6 +93,7 @@ fun HomeScreen(
     )
 
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
+    var snackbarCenterLatLng by remember { mutableStateOf<LatLng?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -112,6 +113,7 @@ fun HomeScreen(
                     } else {
                         context.getString(R.string.no_new_pools)
                     }
+                    snackbarCenterLatLng = event.centerLatLng
                 }
             }
         }
@@ -324,6 +326,44 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.surface,
                             shape = RoundedCornerShape(16.dp)
                         )
+                        .clickable {
+                            val pools = uiState.pools.filter { it.isNew }
+                            if (pools.size > 1) {
+                                val boundsBuilder = LatLngBounds.builder()
+                                pools.forEach { pool ->
+                                    boundsBuilder.include(LatLng(pool.latitude, pool.longitude))
+                                }
+                                try {
+                                    val bounds = boundsBuilder.build()
+                                    coroutineScope.launch {
+                                        cameraPositionState.animate(
+                                            CameraUpdateFactory.newLatLngBounds(bounds, 100),
+                                            1000
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    snackbarCenterLatLng?.let { center ->
+                                        coroutineScope.launch {
+                                            cameraPositionState.animate(
+                                                CameraUpdateFactory.newLatLngZoom(center, 15f),
+                                                1000
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                snackbarCenterLatLng?.let { center ->
+                                    coroutineScope.launch {
+                                        cameraPositionState.animate(
+                                            CameraUpdateFactory.newLatLngZoom(center, 15f),
+                                            1000
+                                        )
+                                    }
+                                }
+                            }
+                            snackbarMessage = null
+                            snackbarCenterLatLng = null
+                        }
                         .padding(12.dp)
                 ) {
                     Row(
