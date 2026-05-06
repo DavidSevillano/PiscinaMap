@@ -81,4 +81,8 @@
     <string name="timeout_error">Timeout</string>
     <string name="unknown_error">Unknown error</string>
     <string name="no_more_pools_area">No more pools found in this area</string>
+    <string name="exit_app_title">Exit app?</string>
+    <string name="exit_app_message">Are you sure you want to exit?</string>
+    <string name="exit">Exit</string>
+    <string name="cancel">Cancel</string>
 </resources>

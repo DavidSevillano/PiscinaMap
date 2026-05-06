@@ -22,9 +22,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -39,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,6 +56,7 @@ import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.components.PoolDetailCard
 import com.burixer85.piscinamap.core.presentation.components.PoolSearchBar
 import com.burixer85.piscinamap.core.presentation.components.SearchAreaButton
+import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDialog
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -102,8 +108,17 @@ val cameraPositionState = rememberCameraPositionState()
     var savedCameraLng by remember { mutableStateOf(0.0) }
     var savedCameraZoom by remember { mutableStateOf(15f) }
     var isInitialLocationLoaded by remember { mutableStateOf(false) }
-    var snackbarMessage by remember { mutableStateOf<String?>(null) }
+var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var snackbarCenterLatLng by remember { mutableStateOf<LatLng?>(null) }
+    var showExitConfirmation by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = selectedPool != null) {
+        selectedPool = null
+    }
+
+    BackHandler(enabled = selectedPool == null) {
+        showExitConfirmation = true
+    }
 
     LaunchedEffect(selectedPool) {
         val pool = selectedPool
@@ -395,5 +410,15 @@ val cameraPositionState = rememberCameraPositionState()
                 }
             }
         }
+    }
+
+    if (showExitConfirmation) {
+        ExitConfirmationDialog(
+            onConfirm = {
+                showExitConfirmation = false
+                (context as? Activity)?.finish()
+            },
+            onDismiss = { showExitConfirmation = false }
+        )
     }
 }

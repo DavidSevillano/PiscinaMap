@@ -81,4 +81,8 @@
     <string name="timeout_error">Tiempo de espera agotado</string>
     <string name="unknown_error">Error desconocido</string>
     <string name="no_more_pools_area">No se encontraron más piscinas en esta zona</string>
+    <string name="exit_app_title">¿Salir de la app?</string>
+    <string name="exit_app_message">¿Estás seguro de que quieres salir?</string>
+    <string name="exit">Salir</string>
+    <string name="cancel">Cancelar</string>
 </resources>

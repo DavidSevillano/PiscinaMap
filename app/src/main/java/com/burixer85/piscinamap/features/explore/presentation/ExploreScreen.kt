@@ -2,6 +2,8 @@ package com.burixer85.piscinamap.features.explore.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +47,7 @@ import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.components.NativeAdCard
 import com.burixer85.piscinamap.core.presentation.components.PoolListCard
+import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDialog
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -71,6 +74,11 @@ fun ExploreScreen(
 
     var nativeAdList by remember { mutableStateOf<List<NativeAd>>(emptyList()) }
     var locationPermissionDecided by remember { mutableStateOf(false) }
+    var showExitConfirmation by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = true) {
+        showExitConfirmation = true
+    }
 
     val locationPermissionState = rememberPermissionState(
         Manifest.permission.ACCESS_FINE_LOCATION
@@ -278,5 +286,15 @@ fun ExploreScreen(
                 }
             }
         }
+    }
+
+    if (showExitConfirmation) {
+        ExitConfirmationDialog(
+            onConfirm = {
+                showExitConfirmation = false
+                (context as? Activity)?.finish()
+            },
+            onDismiss = { showExitConfirmation = false }
+        )
     }
 }
