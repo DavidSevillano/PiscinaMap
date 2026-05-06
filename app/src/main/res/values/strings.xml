@@ -85,4 +85,8 @@
     <string name="exit_app_message">Are you sure you want to exit?</string>
     <string name="exit">Exit</string>
     <string name="cancel">Cancel</string>
+    <string name="update_available_title">Update Available</string>
+    <string name="update_available_message">Version %1$s is available. Update now for new features and fixes!</string>
+    <string name="update">Update</string>
+    <string name="not_now">Not now</string>
 </resources>

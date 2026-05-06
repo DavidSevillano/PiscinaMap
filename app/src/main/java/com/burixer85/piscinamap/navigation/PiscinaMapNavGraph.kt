@@ -1,8 +1,6 @@
 package com.burixer85.piscinamap.navigation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.ui.res.stringResource
-import com.burixer85.piscinamap.R
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,22 +23,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.presentation.components.AdMobBanner
 import com.burixer85.piscinamap.features.detail.presentation.DetailScreen
 import com.burixer85.piscinamap.features.detail.presentation.DetailViewModel
 import com.burixer85.piscinamap.features.explore.presentation.ExploreScreen
+import com.burixer85.piscinamap.features.home.presentation.CameraStateHolder
 import com.burixer85.piscinamap.features.home.presentation.HomeScreen
-import com.burixer85.piscinamap.features.home.presentation.HomeViewModel
 
 @Composable
 fun PiscinaMapNavGraph(
@@ -65,6 +64,7 @@ fun PiscinaMapNavGraph(
                 entry<HomeRouteNav> {
                     HomeScreen(
                         onNavigateToDetail = { poolId ->
+                            CameraStateHolder.isNavigatingToDetail = true
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
@@ -74,6 +74,7 @@ fun PiscinaMapNavGraph(
                 entry<ExploreRouteNav> {
                     ExploreScreen(
                         onNavigateToDetail = { poolId ->
+                            CameraStateHolder.isNavigatingToDetail = true
                             navCounter++
                             backStack.add(DetailRouteNav(poolId))
                         },
@@ -171,7 +172,12 @@ fun PiscinaMapNavGraph(
                     tonalElevation = 8.dp
                 ) {
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = stringResource(R.string.explore)) },
+                        icon = {
+                            Icon(
+                                Icons.Default.Home,
+                                contentDescription = stringResource(R.string.explore)
+                            )
+                        },
                         label = { Text(stringResource(R.string.explore)) },
                         selected = currentRoute is HomeRouteNav,
                         onClick = {
@@ -184,10 +190,17 @@ fun PiscinaMapNavGraph(
                         }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Place, contentDescription = stringResource(R.string.explore)) },
+                        icon = {
+                            Icon(
+                                Icons.Default.Place,
+                                contentDescription = stringResource(R.string.explore)
+                            )
+                        },
                         label = { Text(stringResource(R.string.explore)) },
                         selected = currentRoute is ExploreRouteNav,
                         onClick = {
+                            com.burixer85.piscinamap.features.home.presentation.CameraStateHolder.isNavigatingToDetail =
+                                true
                             val existingExploreIndex =
                                 backStack.indexOfFirst { it is ExploreRouteNav }
                             if (existingExploreIndex != -1 && existingExploreIndex != backStack.lastIndex) {

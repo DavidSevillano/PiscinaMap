@@ -107,7 +107,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun fetchPools(
+fun fetchPools(
         latitude: Double,
         longitude: Double,
         context: Context,
@@ -174,32 +174,53 @@ class HomeViewModel @Inject constructor(
     fun onPredictionSelected(prediction: AutocompletePrediction, context: Context) {
         _uiState.update { it.copy(isLoading = true, predictions = emptyList()) }
 
-        val placesClient = Places.createClient(context)
+        val placesClient = Places.createClient(context.applicationContext)
         val placeFields = listOf(Place.Field.NAME, Place.Field.LAT_LNG)
-        val request = FetchPlaceRequest.builder(prediction.placeId, placeFields)
-            .setSessionToken(sessionToken)
-            .build()
+        val request = FetchPlaceRequest.builder(prediction.placeId, placeFields).build()
 
         placesClient.fetchPlace(request)
             .addOnSuccessListener { response ->
                 val latLng = response.place.latLng
                 if (latLng != null) {
                     sessionToken = null
-                    _uiState.update {
-                        it.copy(
-                            searchText = response.place.name ?: "",
-                        )
-                    }
-
+                    
                     viewModelScope.launch {
                         _events.send(HomeEvent.AnimateToLocation(latLng))
                     }
-                    fetchPools(
-                        latLng.latitude,
-                        latLng.longitude,
-                        context = context,
-                        isManual = true
-                    )
+                    
+                    viewModelScope.launch {
+                        try {
+                            val result = getNearbyPoolsUseCase(latLng.latitude, latLng.longitude)
+                            result.fold(
+                                onSuccess = { pools ->
+                                    val centerLatLng = LatLng(latLng.latitude, latLng.longitude)
+                                    _events.send(HomeEvent.ShowToast(pools.size, centerLatLng))
+                                    _uiState.update {
+                                        it.copy(
+                                            searchText = response.place.name ?: "",
+                                            pools = pools,
+                                            isLoading = false
+                                        )
+                                    }
+                                },
+                                onFailure = { error ->
+                                    _uiState.update {
+                                        it.copy(
+                                            isLoading = false,
+                                            errorMessage = error.message
+                                        )
+                                    }
+                                }
+                            )
+                        } catch (e: Exception) {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = e.message
+                                )
+                            }
+                        }
+                    }
                 } else {
                     _uiState.update {
                         it.copy(
@@ -209,11 +230,11 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             }
-            .addOnFailureListener {
+            .addOnFailureListener { exception ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Error al conectar con el servidor"
+                        errorMessage = "Error: ${exception.message}"
                     )
                 }
             }

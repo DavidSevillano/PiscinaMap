@@ -2,6 +2,8 @@ package com.burixer85.piscinamap.features.home.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -22,13 +24,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import android.app.Activity
-import androidx.activity.compose.BackHandler
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -43,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,10 +50,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.domain.model.Pool
+import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDialog
 import com.burixer85.piscinamap.core.presentation.components.PoolDetailCard
 import com.burixer85.piscinamap.core.presentation.components.PoolSearchBar
 import com.burixer85.piscinamap.core.presentation.components.SearchAreaButton
-import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDialog
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -92,7 +89,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-val cameraPositionState = rememberCameraPositionState()
+    val cameraPositionState = rememberCameraPositionState()
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val locationPermissionState = rememberPermissionState(
@@ -108,9 +105,41 @@ val cameraPositionState = rememberCameraPositionState()
     var savedCameraLng by remember { mutableStateOf(0.0) }
     var savedCameraZoom by remember { mutableStateOf(15f) }
     var isInitialLocationLoaded by remember { mutableStateOf(false) }
-var snackbarMessage by remember { mutableStateOf<String?>(null) }
+    var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var snackbarCenterLatLng by remember { mutableStateOf<LatLng?>(null) }
     var showExitConfirmation by remember { mutableStateOf(false) }
+
+    LaunchedEffect(snackbarMessage) {
+        if (snackbarMessage != null) {
+            kotlinx.coroutines.delay(3000)
+            snackbarMessage = null
+            snackbarCenterLatLng = null
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is HomeEvent.AnimateToLocation -> {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.newLatLngZoom(
+                            event.latLng,
+                            15f
+                        ), 1000
+                    )
+                }
+
+                is HomeEvent.ShowToast -> {
+                    snackbarMessage = if (event.newPoolsCount > 0) {
+                        context.getString(R.string.new_pools_found, event.newPoolsCount)
+                    } else {
+                        context.getString(R.string.no_new_pools)
+                    }
+                    snackbarCenterLatLng = event.centerLatLng
+                }
+            }
+        }
+    }
 
     BackHandler(enabled = selectedPool != null) {
         selectedPool = null
@@ -309,6 +338,10 @@ var snackbarMessage by remember { mutableStateOf<String?>(null) }
                         onNavigateToDetail(id)
                     }
                 )
+            }
+
+            LaunchedEffect(Unit) {
+                CameraStateHolder.isNavigatingToDetail = false
             }
         }
 
