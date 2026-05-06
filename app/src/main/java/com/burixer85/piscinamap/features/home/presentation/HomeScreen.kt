@@ -69,6 +69,13 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 
+object CameraStateHolder {
+    var lastLat: Double = 0.0
+    var lastLng: Double = 0.0
+    var lastZoom: Float = 15f
+    var isNavigatingToDetail: Boolean = false
+}
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
@@ -79,55 +86,37 @@ fun HomeScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val cameraPositionState = rememberCameraPositionState()
+val cameraPositionState = rememberCameraPositionState()
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
+    val locationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
 
     var selectedPool by remember { mutableStateOf<Pool?>(null) }
     var lastSelectedPool by remember { mutableStateOf<Pool?>(null) }
     var poolIconNormal by remember { mutableStateOf<BitmapDescriptor?>(null) }
     var poolIconHighlighted by remember { mutableStateOf<BitmapDescriptor?>(null) }
     var poolIconHidden by remember { mutableStateOf<BitmapDescriptor?>(null) }
-    val locationPermissionState = rememberPermissionState(
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
-
+    var savedCameraLat by remember { mutableStateOf(0.0) }
+    var savedCameraLng by remember { mutableStateOf(0.0) }
+    var savedCameraZoom by remember { mutableStateOf(15f) }
+    var isInitialLocationLoaded by remember { mutableStateOf(false) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var snackbarCenterLatLng by remember { mutableStateOf<LatLng?>(null) }
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is HomeEvent.AnimateToLocation -> {
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.newLatLngZoom(
-                            event.latLng,
-                            15f
-                        ), 1000
-                    )
-                }
-
-                is HomeEvent.ShowToast -> {
-                    snackbarMessage = if (event.newPoolsCount > 0) {
-                        context.getString(R.string.new_pools_found, event.newPoolsCount)
-                    } else {
-                        context.getString(R.string.no_new_pools)
-                    }
-                    snackbarCenterLatLng = event.centerLatLng
-                }
+    LaunchedEffect(selectedPool) {
+        val pool = selectedPool
+        if (pool != null) {
+            lastSelectedPool = pool
+            val poolLatLng = LatLng(pool.latitude, pool.longitude)
+            coroutineScope.launch {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLng(poolLatLng),
+                    durationMs = 500
+                )
             }
         }
-    }
-
-    LaunchedEffect(snackbarMessage) {
-        if (snackbarMessage != null) {
-            kotlinx.coroutines.delay(3000)
-            snackbarMessage = null
-        }
-    }
-
-    LaunchedEffect(selectedPool) {
-        if (selectedPool != null) lastSelectedPool = selectedPool
     }
 
     @SuppressLint("MissingPermission")
@@ -140,28 +129,45 @@ fun HomeScreen(
                 bitmapDescriptorFromVector(context, R.drawable.poolmark_hidden, size = 150)
         }
 
-        if (locationPermissionState.status.isGranted) {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    val userLatLng = LatLng(it.latitude, it.longitude)
+        val wasReturningFromDetail = CameraStateHolder.isNavigatingToDetail
+        if (wasReturningFromDetail) {
+            CameraStateHolder.isNavigatingToDetail = false
+        }
 
-                    coroutineScope.launch {
-                        cameraPositionState.animate(
-                            CameraUpdateFactory.newLatLngZoom(userLatLng, 15f),
-                            durationMs = 1000
-                        )
+        if (locationPermissionState.status.isGranted && !isInitialLocationLoaded) {
+            if (!wasReturningFromDetail) {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    location?.let {
+                        val userLatLng = LatLng(it.latitude, it.longitude)
+
+                        coroutineScope.launch {
+                            cameraPositionState.animate(
+                                CameraUpdateFactory.newLatLngZoom(userLatLng, 15f),
+                                durationMs = 1000
+                            )
+                        }
+                        CameraStateHolder.lastLat = it.latitude
+                        CameraStateHolder.lastLng = it.longitude
+                        CameraStateHolder.lastZoom = 15f
+                        isInitialLocationLoaded = true
+                        viewModel.fetchPools(it.latitude, it.longitude, context = context)
                     }
-                    viewModel.fetchPools(it.latitude, it.longitude, context = context)
                 }
+            } else {
+                isInitialLocationLoaded = true
             }
-        } else {
+        } else if (!locationPermissionState.status.isGranted) {
             locationPermissionState.launchPermissionRequest()
         }
     }
 
     LaunchedEffect(cameraPositionState.isMoving, cameraPositionState.position.target) {
-        viewModel.onMapMoved(cameraPositionState.position.target, cameraPositionState.isMoving)
+        val target = cameraPositionState.position.target
+        CameraStateHolder.lastLat = target.latitude
+        CameraStateHolder.lastLng = target.longitude
+        CameraStateHolder.lastZoom = cameraPositionState.position.zoom
+        viewModel.onMapMoved(target, cameraPositionState.isMoving)
     }
 
     Box(
@@ -284,6 +290,7 @@ fun HomeScreen(
                     onClose = { selectedPool = null },
                     onNavigateToDetail = { id ->
                         focusManager.clearFocus()
+                        CameraStateHolder.isNavigatingToDetail = true
                         onNavigateToDetail(id)
                     }
                 )
