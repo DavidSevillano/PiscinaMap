@@ -2,13 +2,31 @@
 <resources>
     <string name="app_name">PiscinaMap</string>
 
-    <!-- Pool Detail -->
-    <string name="pool_photo">Foto de %1$s</string>
+    <!-- ========== HOME SCREEN ========== -->
+    <string name="no_pools_in_this_area">No hay piscinas en esta zona</string>
+    <string name="location_not_available">Ubicación no disponible</string>
+    <string name="server_connection_error">Error al conectar con el servidor</string>
+    <string name="new_pools_found">¡Se han encontrado %1$d nuevas piscinas!</string>
+    <string name="no_new_pools">No hay piscinas nuevas en esta zona</string>
+    <string name="timeout_error">Tiempo de espera agotado</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="no_more_pools_area">No se encontraron más piscinas en esta zona</string>
+    <string name="search_this_area">Buscar en esta zona</string>
+
+    <!-- ========== DETAIL SCREEN ========== -->
+    <string name="go_back">Volver</string>
+    <string name="error_occurred">Error: %1$s</string>
+    <string name="retry">Reintentar</string>
+    <string name="hide_pool">Ocultar esta piscina</string>
+    <string name="not_a_pool">Esto no es una piscina</string>
+    <string name="unhide_pool">Volver a mostrar piscina</string>
+    <string name="pool_hidden">Esta piscina está oculta</string>
+    <string name="more_options">Más opciones</string>
+    <string name="get_directions">Cómo llegar</string>
+    <string name="call">Llamar</string>
     <string name="rating_value">Valoración</string>
     <string name="open">Abierto</string>
     <string name="closed">Cerrado</string>
-    <string name="get_directions">Cómo llegar</string>
-    <string name="call">Llamar</string>
     <string name="schedule_today">Horario de hoy</string>
     <string name="schedule">Horario</string>
     <string name="collapse">Contraer</string>
@@ -19,50 +37,40 @@
     <string name="oldest">Antiguas</string>
     <string name="best">Mejores</string>
     <string name="worst">Peores</string>
+    <string name="search_more">Buscar más piscinas</string>
 
-    <!-- Review Card -->
+    <!-- ========== EXIT DIALOG ========== -->
+    <string name="exit_app_title">¿Salir de la app?</string>
+    <string name="exit_app_message">¿Estás seguro de que quieres salir?</string>
+    <string name="exit">Salir</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- ========== POOL SEARCH BAR ========== -->
+    <string name="search_pools_or_areas">Buscar piscinas o zonas…</string>
+    <string name="clear">Borrar</string>
+
+    <!-- ========== POOL DETAIL CARD ========== -->
+    <string name="pool_photo">Foto de %1$s</string>
+    <string name="no_photo_available">Sin foto disponible</string>
+    <string name="no_schedule_available">Sin horario disponible</string>
+    <string name="close_detail">Cerrar detalle</string>
+    <string name="na">N/D</string>
+    <string name="no_schedule_dot">Sin horario.</string>
+
+    <!-- ========== REVIEW CARD ========== -->
     <string name="photo_by">Foto de %1$s</string>
     <string name="translated_review">Reseña traducida</string>
     <string name="see_less">Ver menos</string>
     <string name="see_more">Ver más</string>
 
-    <!-- Pool Detail Card -->
-    <string name="no_photo_available">Sin foto disponible</string>
-    <string name="no_schedule_available">Sin horario disponible</string>
-    <string name="close_detail">Cerrar detalle</string>
-
-    <!-- Pool Search Bar -->
-    <string name="search_pools_or_areas">Buscar piscinas o zonas…</string>
-    <string name="clear">Borrar</string>
-
-    <!-- Search Area -->
-    <string name="search_this_area">Buscar en esta zona</string>
-
-    <!-- Home -->
-    <string name="no_pools_in_this_area">No hay piscinas en esta zona</string>
-    <string name="location_not_available">Ubicación no disponible</string>
-    <string name="server_connection_error">Error al conectar con el servidor</string>
-    <string name="new_pools_found">¡Se han encontrado %1$d nuevas piscinas!</string>
-
-    <!-- Detail Screen -->
-    <string name="go_back">Volver</string>
-    <string name="error_occurred">Error: %1$s</string>
-    <string name="retry">Reintentar</string>
-    <string name="hide_pool">Ocultar esta piscina</string>
-    <string name="not_a_pool">Esto no es una piscina</string>
-    <string name="unhide_pool">Volver a mostrar piscina</string>
-    <string name="pool_hidden">Esta piscina está oculta</string>
-
-    <!-- Pool Detail Card -->
-    <string name="na">N/D</string>
-    <string name="no_schedule_dot">Sin horario.</string>
-
-    <!-- Bottom Bar -->
+    <!-- ========== NAV / BOTTOM BAR ========== -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_list">Listado</string>
     <string name="explore">Explorar</string>
     <string name="favorites">Favoritos</string>
     <string name="settings">Ajustes</string>
 
-    <!-- DTO Types -->
+    <!-- ========== DTO / AMENITIES TYPES ========== -->
     <string name="swimming_pool">Piscina</string>
     <string name="gym">Gimnasio</string>
     <string name="spa">Spa</string>
@@ -75,16 +83,8 @@
     <string name="lifeguard">Socorrista</string>
     <string name="water_slide">Tobogán</string>
     <string name="kids_pool">Piscina infantil</string>
-    <string name="search_more">Buscar más piscinas</string>
-    <string name="more_options">Más opciones</string>
-    <string name="no_new_pools">No hay piscinas nuevas en esta zona</string>
-    <string name="timeout_error">Tiempo de espera agotado</string>
-    <string name="unknown_error">Error desconocido</string>
-    <string name="no_more_pools_area">No se encontraron más piscinas en esta zona</string>
-    <string name="exit_app_title">¿Salir de la app?</string>
-    <string name="exit_app_message">¿Estás seguro de que quieres salir?</string>
-    <string name="exit">Salir</string>
-    <string name="cancel">Cancelar</string>
+
+    <!-- ========== UPDATE AVAILABLE DIALOG ========== -->
     <string name="update_available_title">Actualización disponible</string>
     <string name="update_available_message">La versión %1$s está disponible. ¡Actualiza ahora para nuevas funciones y correcciones!</string>
     <string name="update">Actualizar</string>

@@ -11,15 +11,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,6 +56,9 @@ import com.burixer85.piscinamap.core.presentation.components.PoolDetailCard
 import com.burixer85.piscinamap.core.presentation.components.PoolSearchBar
 import com.burixer85.piscinamap.core.presentation.components.SearchAreaButton
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
+import com.burixer85.piscinamap.ui.theme.AbyssalBorder
+import com.burixer85.piscinamap.ui.theme.AbyssalSurfaceHi
+import com.burixer85.piscinamap.ui.theme.AbyssalText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -67,6 +71,7 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -108,6 +113,7 @@ fun HomeScreen(
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var snackbarCenterLatLng by remember { mutableStateOf<LatLng?>(null) }
     var showExitConfirmation by remember { mutableStateOf(false) }
+    var isMapLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(snackbarMessage) {
         if (snackbarMessage != null) {
@@ -217,10 +223,22 @@ fun HomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        val mapProperties = remember(locationPermissionState.status.isGranted) {
+        val isDarkTheme = isSystemInDarkTheme()
+        val mapStyle = remember(isDarkTheme) {
+            val res =
+                if (isDarkTheme) R.raw.map_style_dark else R.raw.map_style_light
+            MapStyleOptions.loadRawResourceStyle(context, res)
+        }
+        val mapProperties = remember(locationPermissionState.status.isGranted, isDarkTheme) {
             MapProperties(
-                mapStyleOptions = MapStyleOptions("[{ \"featureType\": \"poi\", \"stylers\": [{ \"visibility\": \"off\" }] }]"),
+                mapStyleOptions = mapStyle,
                 isMyLocationEnabled = locationPermissionState.status.isGranted
+            )
+        }
+        val mapUiSettings = remember {
+            MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false
             )
         }
 
@@ -232,7 +250,10 @@ fun HomeScreen(
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 properties = mapProperties,
+                uiSettings = mapUiSettings,
                 cameraPositionState = cameraPositionState,
+                contentPadding = PaddingValues(top = 76.dp, bottom = 140.dp),
+                onMapLoaded = { isMapLoaded = true },
                 onMapClick = { selectedPool = null; focusManager.clearFocus() }
             ) {
                 val poolIconSelected =
@@ -262,18 +283,20 @@ fun HomeScreen(
                         )
                 }
             }
+
+            if (!isMapLoaded) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                )
+            }
         }
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-            )
             PoolSearchBar(
                 searchText = uiState.searchText,
                 predictions = uiState.predictions,
@@ -320,11 +343,7 @@ fun HomeScreen(
             visible = selectedPool != null,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = bottomPadding.dp
-                ),
+                .padding(bottom = bottomPadding.dp),
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
@@ -378,8 +397,15 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp)
                         .background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = RoundedCornerShape(16.dp)
+                            color = AbyssalSurfaceHi,
+                            shape = RoundedCornerShape(18.dp)
+                        )
+                        .then(
+                            Modifier.border(
+                                width = 1.dp,
+                                color = AbyssalBorder,
+                                shape = RoundedCornerShape(18.dp)
+                            )
                         )
                         .clickable {
                             val pools = uiState.pools.filter { it.isNew }
@@ -433,7 +459,7 @@ fun HomeScreen(
                         )
                         Text(
                             text = snackbarMessage ?: "",
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = AbyssalText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,

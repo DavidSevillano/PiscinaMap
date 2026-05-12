@@ -19,10 +19,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.burixer85.piscinamap.navigation.PiscinaMapNavGraph
 import com.burixer85.piscinamap.core.presentation.components.UpdateAvailableDialog
 import com.burixer85.piscinamap.ui.theme.PiscinaMapTheme
@@ -79,15 +81,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        window.statusBarColor = 0xFFFAFAFA.toInt()
-        window.navigationBarColor = 0x00000000
+        WindowCompat.getInsetsController(window, window.decorView).let { ctrl ->
+            ctrl.hide(WindowInsetsCompat.Type.systemBars())
+            ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
 
         setContent {
             val currentVersion = BuildConfig.VERSION_NAME
             PiscinaMapTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF1EEE8)
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     Box {
                         PiscinaMapNavGraph()

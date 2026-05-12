@@ -1,0 +1,73 @@
+package com.burixer85.piscinamap.core.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.burixer85.piscinamap.ui.theme.AbyssalTextMute
+import com.burixer85.piscinamap.ui.theme.DaylightTextMute
+
+@Composable
+fun NavItem(
+    icon: ImageVector,
+    label: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val cs = MaterialTheme.colorScheme
+    val textMute = if (isSystemInDarkTheme()) AbyssalTextMute else DaylightTextMute
+
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .width(56.dp)
+                .height(28.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(
+                    if (isActive) cs.primary.copy(alpha = 0.18f)
+                    else Color.Transparent
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isActive) cs.primary else textMute,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Text(
+            text = label,
+            color = if (isActive) cs.onSurface else textMute,
+            fontSize = 11.sp,
+            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+            modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}

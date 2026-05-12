@@ -4,7 +4,7 @@
     <style name="Theme.PiscinaMap" parent="android:Theme.Material.Light.NoActionBar" />
 
     <style name="Theme.PiscinaMap.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#9ad2d0</item>
+        <item name="windowSplashScreenBackground">#0F1829</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="windowSplashScreenAnimationDuration">1500</item>
         <item name="postSplashScreenTheme">@style/Theme.PiscinaMap</item>

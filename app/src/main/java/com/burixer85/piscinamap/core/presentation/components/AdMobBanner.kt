@@ -2,6 +2,7 @@ package com.burixer85.piscinamap.core.presentation.components
 
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -9,13 +10,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.burixer85.piscinamap.BuildConfig
-import com.google.android.gms.ads.admanager.AdManagerAdView
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.admanager.AdManagerAdView
 
 @Composable
 fun AdMobBanner(
@@ -39,7 +41,8 @@ fun AdMobBanner(
 
     AndroidView(
         factory = { ctx ->
-            val bannerId = if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/6300978111" else BuildConfig.ADMOB_BANNER_ID
+            val bannerId =
+                if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/6300978111" else BuildConfig.ADMOB_BANNER_ID
             AdManagerAdView(ctx).apply {
                 setAdSize(AdSize.SMART_BANNER)
                 adUnitId = bannerId
@@ -55,6 +58,8 @@ fun AdMobBanner(
                 adViewRef = this
             }
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .height(60.dp)
     )
 }

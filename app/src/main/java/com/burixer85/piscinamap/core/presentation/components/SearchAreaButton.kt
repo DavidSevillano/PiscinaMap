@@ -1,19 +1,24 @@
 package com.burixer85.piscinamap.core.presentation.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,31 +32,30 @@ fun SearchAreaButton(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val buttonText = getString(context, R.string.search_this_area)
+    val cs = MaterialTheme.colorScheme
 
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        shape = RoundedCornerShape(24.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 0.dp
-        )
+    Row(
+        modifier = modifier
+            .height(40.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(cs.surfaceVariant)
+            .border(1.dp, cs.outline, RoundedCornerShape(999.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
             contentDescription = null,
-            modifier = Modifier.size(18.dp)
+            tint = cs.onSurface,
+            modifier = Modifier.size(16.dp)
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(7.dp))
         Text(
-            text = buttonText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+            text = getString(context, R.string.search_this_area),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = cs.onSurface
         )
     }
 }

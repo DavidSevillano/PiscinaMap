@@ -19,11 +19,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -38,6 +38,7 @@ fun ShimmerPlaceholder() {
         ),
         label = "shimmerAlpha"
     )
+    val shimmerColor = MaterialTheme.colorScheme.surfaceVariant
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -51,7 +52,7 @@ fun ShimmerPlaceholder() {
                     .height(250.dp)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .background(Color.LightGray.copy(alpha = alpha))
+                    .background(shimmerColor.copy(alpha = alpha))
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -62,7 +63,7 @@ fun ShimmerPlaceholder() {
                     .height(28.dp)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.LightGray.copy(alpha = alpha))
+                    .background(shimmerColor.copy(alpha = alpha))
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -73,7 +74,7 @@ fun ShimmerPlaceholder() {
                     .height(18.dp)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.LightGray.copy(alpha = alpha))
+                    .background(shimmerColor.copy(alpha = alpha))
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -89,14 +90,14 @@ fun ShimmerPlaceholder() {
                         .weight(1f)
                         .height(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray.copy(alpha = alpha))
+                        .background(shimmerColor.copy(alpha = alpha))
                 )
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray.copy(alpha = alpha))
+                        .background(shimmerColor.copy(alpha = alpha))
                 )
             }
 
@@ -108,7 +109,7 @@ fun ShimmerPlaceholder() {
                     .height(20.dp)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.LightGray.copy(alpha = alpha))
+                    .background(shimmerColor.copy(alpha = alpha))
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -120,7 +121,7 @@ fun ShimmerPlaceholder() {
                         .height(14.dp)
                         .padding(horizontal = 16.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.LightGray.copy(alpha = alpha))
+                        .background(shimmerColor.copy(alpha = alpha))
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -139,7 +140,7 @@ fun ShimmerPlaceholder() {
                             .height(32.dp)
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.LightGray.copy(alpha = alpha))
+                            .background(shimmerColor.copy(alpha = alpha))
                     )
                 }
             }

@@ -1,70 +1,80 @@
 package com.burixer85.piscinamap.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Teal60,
-    secondary = BlueGrey60,
-    tertiary = Blue60,
-    background = Color(0xFF1C1B1F),
-    surface = Color(0xFF1C1B1F),
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
-    onTertiary = Color.Black,
-    onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5),
-    surfaceVariant = Color(0xFF2D3A3F),
-    onSurfaceVariant = Color(0xFFB0BEC5),
-    outline = Color(0xFF5F6B72),
-    outlineVariant = Color(0xFF2D3A3F),
-    secondaryContainer = Color(0xFF37474F),
-    onSecondaryContainer = Color(0xFFB0BEC5)
+// Abyssal dark — deep navy + cyan aquatic premium
+private val AbyssalDarkScheme = darkColorScheme(
+    primary             = AbyssalCyan,
+    onPrimary           = AbyssalBg,
+    primaryContainer    = AbyssalCyanSoft,
+    onPrimaryContainer  = AbyssalCyan,
+    secondary           = AbyssalTextDim,
+    onSecondary         = AbyssalBg,
+    secondaryContainer  = AbyssalSurface,
+    onSecondaryContainer = AbyssalTextDim,
+    tertiary            = AbyssalGreen,
+    onTertiary          = AbyssalBg,
+    tertiaryContainer   = Color(0xFF0A2E1A),
+    onTertiaryContainer = AbyssalGreen,
+    background          = AbyssalBg,
+    onBackground        = AbyssalText,
+    surface             = AbyssalSurface,
+    onSurface           = AbyssalText,
+    surfaceVariant      = AbyssalSurfaceHi,
+    onSurfaceVariant    = AbyssalTextDim,
+    outline             = AbyssalBorder,
+    outlineVariant      = AbyssalBorderHi,
+    error               = AbyssalRed,
+    onError             = AbyssalText,
+    errorContainer      = Color(0xFF3A1008),
+    onErrorContainer    = AbyssalRed,
+    inverseSurface      = AbyssalText,
+    inverseOnSurface    = AbyssalBg,
+    inversePrimary      = AbyssalCyanDeep,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Teal40,
-    secondary = BlueGrey40,
-    tertiary = Blue40,
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    surfaceVariant = Color(0xFFE0F2F1),
-    onSurfaceVariant = Color(0xFF00695C),
-    outline = Color(0xFF4DB6AC),
-    outlineVariant = Color(0xFFB2DFDB),
-    secondaryContainer = Color(0xFFB2DFDB),
-    onSecondaryContainer = Color(0xFF004D40)
+// Daylight — white + deep cyan (light variant of Abyssal)
+private val DaylightLightScheme = lightColorScheme(
+    primary             = DaylightCyan,
+    onPrimary           = DaylightBg,
+    primaryContainer    = Color(0xFFCCEEF0),
+    onPrimaryContainer  = DaylightCyan,
+    secondary           = DaylightTextDim,
+    onSecondary         = DaylightBg,
+    secondaryContainer  = Color(0xFFE0EEF6),
+    onSecondaryContainer = DaylightTextDim,
+    tertiary            = DaylightGreen,
+    onTertiary          = DaylightBg,
+    tertiaryContainer   = Color(0xFFCCEEDE),
+    onTertiaryContainer = DaylightGreen,
+    background          = DaylightBg,
+    onBackground        = DaylightText,
+    surface             = DaylightSurface,
+    onSurface           = DaylightText,
+    surfaceVariant      = DaylightBg2,
+    onSurfaceVariant    = DaylightTextDim,
+    outline             = DaylightBorder,
+    outlineVariant      = Color(0xFFD5E5EE),
+    error               = DaylightRed,
+    onError             = DaylightBg,
+    errorContainer      = Color(0xFFFFE0DA),
+    onErrorContainer    = DaylightRed,
+    inverseSurface      = AbyssalBg,
+    inverseOnSurface    = AbyssalText,
+    inversePrimary      = AbyssalCyan,
 )
 
 @Composable
 fun PiscinaMapTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) AbyssalDarkScheme else DaylightLightScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
