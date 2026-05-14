@@ -92,6 +92,7 @@ data class ReviewDto(
     @SerialName("rating") val rating: Float,
     @SerialName("text") val text: String,
     @SerialName("relative_time_description") val relativeTimeDescription: String,
+    @SerialName("time") val time: Long = 0L,
     @SerialName("language") val language: String? = null,
     @SerialName("profile_photo_url") val profilePhotoUrl: String? = null
 )
@@ -134,12 +135,13 @@ val weekdayText = this.openingHours?.weekdayText ?: emptyList()
         services = services,
         reviews = this.reviews?.map {
             Review(
-                it.authorName,
-                it.rating,
-                it.text,
-                it.relativeTimeDescription,
-                it.language,
-                it.profilePhotoUrl
+                authorName = it.authorName,
+                rating = it.rating,
+                text = it.text,
+                relativeTimeDescription = it.relativeTimeDescription,
+                publishedAt = it.time,
+                language = it.language,
+                profilePhotoUrl = it.profilePhotoUrl
             )
         } ?: emptyList()
     )

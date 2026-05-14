@@ -8,6 +8,7 @@ import com.burixer85.piscinamap.core.data.dto.toDomain
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
 import com.burixer85.piscinamap.features.explore.domain.repository.ExploreRepository
+import java.util.Locale
 import javax.inject.Inject
 
 class ExploreRepositoryImpl @Inject constructor(
@@ -21,10 +22,12 @@ class ExploreRepositoryImpl @Inject constructor(
         radius: Int
     ): Result<List<Pool>> {
         return try {
+            val language = Locale.getDefault().language
             val response = api.getNearbyPools(
                 location = "$lat,$lng",
                 radius = radius,
                 keyword = "swimming_pool",
+                language = language,
                 apiKey = BuildConfig.GOOGLEMAPS_KEY
             )
 
@@ -50,7 +53,9 @@ class ExploreRepositoryImpl @Inject constructor(
                         "s.a.",
                         "slne"
                     )
-                    excludePatterns.none { pattern -> name.contains(pattern) }
+                    val genericNames = listOf("swimming pool", "piscina", "pool")
+                    val isGenericName = genericNames.any { name.trim() == it }
+                    !isGenericName && excludePatterns.none { pattern -> name.contains(pattern) }
                 }
                 .map { place ->
                     val isHidden = HiddenPoolsManager.isHidden(context, place.placeId)

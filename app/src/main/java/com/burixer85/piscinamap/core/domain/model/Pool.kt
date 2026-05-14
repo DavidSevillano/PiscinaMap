@@ -26,6 +26,7 @@ data class Review(
     val rating: Float,
     val text: String,
     val relativeTimeDescription: String,
+    val publishedAt: Long = 0L,
     val language: String? = null,
     val profilePhotoUrl: String? = null
 )

@@ -72,24 +72,7 @@ import com.burixer85.piscinamap.ui.theme.AbyssalStar
 import com.burixer85.piscinamap.ui.theme.AbyssalTextMute
 import com.burixer85.piscinamap.ui.theme.DaylightStar
 import com.burixer85.piscinamap.ui.theme.DaylightTextMute
-import java.util.Calendar
 
-private fun parseRelativeTime(timeStr: String): Long {
-    val lower = timeStr.lowercase()
-    val numberRegex = Regex("\\d+")
-    val number = numberRegex.find(lower)?.value?.toIntOrNull() ?: 1
-
-    return when {
-        lower.contains("now") || lower.contains("just now") -> 0
-        lower.contains("minute") || lower.contains("min") -> number * 60L
-        lower.contains("hour") || lower.contains("hr") -> number * 3600L
-        lower.contains("day") -> number * 86400L
-        lower.contains("week") -> number * 604800L
-        lower.contains("month") -> number * 2592000L
-        lower.contains("year") -> number * 31536000L
-        else -> Long.MAX_VALUE
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -579,8 +562,8 @@ fun PoolDetailContent(
 
                 val sortedReviews = remember(pool.reviews, selectedFilter) {
                     when (selectedFilter) {
-                        "recent" -> pool.reviews.sortedBy { parseRelativeTime(it.relativeTimeDescription) }
-                        "oldest" -> pool.reviews.sortedByDescending { parseRelativeTime(it.relativeTimeDescription) }
+                        "recent" -> pool.reviews.sortedByDescending { it.publishedAt }
+                        "oldest" -> pool.reviews.sortedBy { it.publishedAt }
                         "best" -> pool.reviews.sortedByDescending { it.rating }
                         "worst" -> pool.reviews.sortedBy { it.rating }
                         else -> pool.reviews

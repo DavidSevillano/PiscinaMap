@@ -21,10 +21,12 @@ class PoolRepositoryImpl @Inject constructor(
         radius: Int
     ): Result<List<Pool>> {
         return try {
+            val language = Locale.getDefault().language
             val response = api.getNearbyPools(
                 location = "$lat,$lng",
                 radius = radius,
                 keyword = "swimming_pool",
+                language = language,
                 apiKey = BuildConfig.GOOGLEMAPS_KEY
             )
 
@@ -69,7 +71,9 @@ class PoolRepositoryImpl @Inject constructor(
                         "s.a.",
                         "slne"
                     )
-                    excludePatterns.none { pattern -> name.contains(pattern) }
+                    val genericNames = listOf("swimming pool", "piscina", "pool")
+                    val isGenericName = genericNames.any { name.trim() == it }
+                    !isGenericName && excludePatterns.none { pattern -> name.contains(pattern) }
                 }
                 .map { place ->
                     val isHidden = HiddenPoolsManager.isHidden(context, place.placeId)

@@ -11,6 +11,7 @@ interface GooglePlacesApi {
         @Query("location") location: String,
         @Query("radius") radius: Int,
         @Query("keyword") keyword: String = "swimming_pool",
+        @Query("language") language: String,
         @Query("key") apiKey: String
     ): PlacesResponse
 
