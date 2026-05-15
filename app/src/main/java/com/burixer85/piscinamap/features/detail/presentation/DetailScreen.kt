@@ -52,10 +52,55 @@ fun DetailScreen(
         mutableStateOf(HiddenPoolsManager.isHidden(context, poolId))
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    DetailContent(
+        uiState = uiState,
+        isHidden = isHidden,
+        showMenu = showMenu,
+        onRetry = viewModel::retry,
+        onCallClick = { phone ->
+            val intent = Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
+            context.startActivity(intent)
+        },
+        onBack = onBack,
+        onMoreClick = { showMenu = true },
+        onHidePool = {
+            showMenu = false
+            scope.launch {
+                delay(100)
+                HiddenPoolsManager.hidePool(context, poolId)
+                isHidden = true
+                PoolStateManager.emitHiddenStateChange(poolId, true)
+            }
+        },
+        onUnhidePool = {
+            showMenu = false
+            scope.launch {
+                delay(100)
+                HiddenPoolsManager.showPool(context, poolId)
+                isHidden = false
+                PoolStateManager.emitHiddenStateChange(poolId, false)
+            }
+        },
+        onDismissMenu = { showMenu = false },
+    )
+}
+
+@Composable
+internal fun DetailContent(
+    uiState: DetailUiState,
+    isHidden: Boolean = false,
+    showMenu: Boolean = false,
+    onRetry: () -> Unit = {},
+    onCallClick: (String) -> Unit = {},
+    onBack: () -> Unit = {},
+    onMoreClick: () -> Unit = {},
+    onHidePool: () -> Unit = {},
+    onUnhidePool: () -> Unit = {},
+    onDismissMenu: () -> Unit = {},
+) {
+    val context = LocalContext.current
+
+    Box(modifier = Modifier.fillMaxSize()) {
         when {
             uiState.error != null -> {
                 Column(
@@ -64,7 +109,7 @@ fun DetailScreen(
                 ) {
                     Text(stringResource(R.string.error_occurred, uiState.error ?: ""))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { viewModel.retry() }) {
+                    Button(onClick = onRetry) {
                         Text(stringResource(R.string.retry))
                     }
                 }
@@ -77,15 +122,11 @@ fun DetailScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 } else {
-                    val poolToShow = uiState.pool!!.copy(isHidden = isHidden)
                     PoolDetailContent(
-                        pool = poolToShow,
-                        onCallClick = { phone ->
-                            val intent = Intent(Intent.ACTION_DIAL, "tel:$phone".toUri())
-                            context.startActivity(intent)
-                        },
+                        pool = uiState.pool.copy(isHidden = isHidden),
+                        onCallClick = onCallClick,
                         onBack = onBack,
-                        onMoreClick = { showMenu = true }
+                        onMoreClick = onMoreClick,
                     )
                 }
             }
@@ -102,39 +143,19 @@ fun DetailScreen(
         ) {
             DropdownMenu(
                 expanded = showMenu,
-                onDismissRequest = { showMenu = false }
+                onDismissRequest = onDismissMenu,
             ) {
                 if (isHidden) {
                     DropdownMenuItem(
                         text = { Text(getString(context, R.string.unhide_pool)) },
-                        onClick = {
-                            showMenu = false
-                            scope.launch {
-                                delay(100)
-                                HiddenPoolsManager.showPool(context, poolId)
-                                isHidden = false
-                                PoolStateManager.emitHiddenStateChange(poolId, false)
-                            }
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Visibility, contentDescription = null)
-                        }
+                        onClick = onUnhidePool,
+                        leadingIcon = { Icon(Icons.Default.Visibility, contentDescription = null) }
                     )
                 } else {
                     DropdownMenuItem(
                         text = { Text(getString(context, R.string.not_a_pool)) },
-                        onClick = {
-                            showMenu = false
-                            scope.launch {
-                                delay(100)
-                                HiddenPoolsManager.hidePool(context, poolId)
-                                isHidden = true
-                                PoolStateManager.emitHiddenStateChange(poolId, true)
-                            }
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.VisibilityOff, contentDescription = null)
-                        }
+                        onClick = onHidePool,
+                        leadingIcon = { Icon(Icons.Default.VisibilityOff, contentDescription = null) }
                     )
                 }
             }

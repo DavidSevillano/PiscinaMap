@@ -128,6 +128,34 @@ fun ExploreScreen(
         }
     }
 
+    ExploreContent(
+        uiState = uiState,
+        onFetchMore = viewModel::fetchMorePools,
+        onNavigateToDetail = onNavigateToDetail,
+        nativeAdList = nativeAdList,
+        showExitConfirmation = showExitConfirmation,
+        onConfirmExit = {
+            showExitConfirmation = false
+            (context as? Activity)?.finish()
+        },
+        onDismissExit = { showExitConfirmation = false },
+        bottomPadding = bottomPadding,
+    )
+}
+
+@Composable
+internal fun ExploreContent(
+    uiState: ExploreUiState,
+    onFetchMore: () -> Unit,
+    onNavigateToDetail: (String) -> Unit,
+    nativeAdList: List<NativeAd> = emptyList(),
+    showExitConfirmation: Boolean = false,
+    onConfirmExit: () -> Unit = {},
+    onDismissExit: () -> Unit = {},
+    bottomPadding: Int = 0,
+) {
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -207,7 +235,7 @@ fun ExploreScreen(
 
                         val itemList = buildList {
                             var totalPools = 0
-                            visiblePools.forEachIndexed { index, pool ->
+                            visiblePools.forEachIndexed { _, pool ->
                                 add(pool)
                                 totalPools++
 
@@ -228,12 +256,9 @@ fun ExploreScreen(
                                         onNavigateToDetail = onNavigateToDetail
                                     )
                                 }
-
                                 is Int -> {
-                                    val adIndex =
-                                        if (nativeAdList.isNotEmpty()) item % nativeAdList.size else 0
-                                    val adForPosition = nativeAdList.getOrNull(adIndex)
-                                        ?: nativeAdList.firstOrNull()
+                                    val adIndex = if (nativeAdList.isNotEmpty()) item % nativeAdList.size else 0
+                                    val adForPosition = nativeAdList.getOrNull(adIndex) ?: nativeAdList.firstOrNull()
                                     NativeAdCard(
                                         nativeAd = adForPosition,
                                         ctaText = stringResource(R.string.see_more)
@@ -251,13 +276,9 @@ fun ExploreScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (uiState.isLoadingMore) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
                                     } else {
-                                        Button(
-                                            onClick = { viewModel.fetchMorePools() }
-                                        ) {
+                                        Button(onClick = onFetchMore) {
                                             Text(stringResource(R.string.search_more))
                                         }
                                     }
@@ -281,11 +302,8 @@ fun ExploreScreen(
 
     if (showExitConfirmation) {
         ExitConfirmationDialog(
-            onConfirm = {
-                showExitConfirmation = false
-                (context as? Activity)?.finish()
-            },
-            onDismiss = { showExitConfirmation = false }
+            onConfirm = onConfirmExit,
+            onDismiss = onDismissExit,
         )
     }
 }

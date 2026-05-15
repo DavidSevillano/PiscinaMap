@@ -31,26 +31,26 @@ class HiddenPoolsManagerInstrumentedTest {
     }
 
     @Test
-    fun `isHidden returns false for pool not in hidden set`() {
+    fun isHiddenReturnsFalseForPoolNotInHiddenSet() {
         assertFalse(HiddenPoolsManager.isHidden(context, "pool_new"))
     }
 
     @Test
-    fun `hidePool persists pool id and isHidden returns true`() {
+    fun hidePoolPersistsPoolIdAndIsHiddenReturnsTrue() {
         HiddenPoolsManager.hidePool(context, "pool_A")
 
         assertTrue(HiddenPoolsManager.isHidden(context, "pool_A"))
     }
 
     @Test
-    fun `hidePool does not affect other pools`() {
+    fun hidePoolDoesNotAffectOtherPools() {
         HiddenPoolsManager.hidePool(context, "pool_A")
 
         assertFalse(HiddenPoolsManager.isHidden(context, "pool_B"))
     }
 
     @Test
-    fun `showPool removes pool from hidden set`() {
+    fun showPoolRemovesPoolFromHiddenSet() {
         HiddenPoolsManager.hidePool(context, "pool_A")
         HiddenPoolsManager.showPool(context, "pool_A")
 
@@ -58,14 +58,14 @@ class HiddenPoolsManagerInstrumentedTest {
     }
 
     @Test
-    fun `showPool on non-hidden pool does not throw`() {
+    fun showPoolOnNonHiddenPoolDoesNotThrow() {
         HiddenPoolsManager.showPool(context, "pool_not_hidden")
 
         assertFalse(HiddenPoolsManager.isHidden(context, "pool_not_hidden"))
     }
 
     @Test
-    fun `getHiddenIds returns all hidden pool ids`() {
+    fun getHiddenIdsReturnsAllHiddenPoolIds() {
         HiddenPoolsManager.hidePool(context, "pool_1")
         HiddenPoolsManager.hidePool(context, "pool_2")
         HiddenPoolsManager.hidePool(context, "pool_3")
@@ -76,12 +76,12 @@ class HiddenPoolsManagerInstrumentedTest {
     }
 
     @Test
-    fun `getHiddenIds returns empty set when no pools hidden`() {
+    fun getHiddenIdsReturnsEmptySetWhenNoPoolsHidden() {
         assertTrue(HiddenPoolsManager.getHiddenIds(context).isEmpty())
     }
 
     @Test
-    fun `hidePool is idempotent for same pool id`() {
+    fun hidePoolIsIdempotentForSamePoolId() {
         HiddenPoolsManager.hidePool(context, "pool_A")
         HiddenPoolsManager.hidePool(context, "pool_A")
 
@@ -90,7 +90,7 @@ class HiddenPoolsManagerInstrumentedTest {
     }
 
     @Test
-    fun `hidden state persists across multiple hide and show cycles`() {
+    fun hiddenStatePersistsAcrossMultipleHideAndShowCycles() {
         HiddenPoolsManager.hidePool(context, "pool_A")
         HiddenPoolsManager.showPool(context, "pool_A")
         HiddenPoolsManager.hidePool(context, "pool_A")
@@ -99,7 +99,7 @@ class HiddenPoolsManagerInstrumentedTest {
     }
 
     @Test
-    fun `showPool removes only the specified pool from hidden set`() {
+    fun showPoolRemovesOnlyTheSpecifiedPoolFromHiddenSet() {
         HiddenPoolsManager.hidePool(context, "pool_1")
         HiddenPoolsManager.hidePool(context, "pool_2")
 

@@ -35,10 +35,10 @@ android {
         applicationId = "com.burixer85.piscinamap"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.3"
+        versionCode = 6
+        versionName = "1.0.4"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.burixer85.piscinamap.HiltTestRunner"
 
         buildConfigField(
             "String",
@@ -142,6 +142,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
@@ -166,6 +168,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit)
+    testImplementation(libs.squareup.okhttp3.mockwebserver)
 
     // ViewModel & Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
