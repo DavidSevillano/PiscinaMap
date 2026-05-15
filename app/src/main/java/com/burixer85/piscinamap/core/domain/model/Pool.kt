@@ -16,7 +16,8 @@ data class Pool(
     val openingHours: List<String> = emptyList(),
     val currentOpeningHours: String? = null,
     val services: List<String> = emptyList(),
-    val reviews: List<Review> = emptyList()
+    val reviews: List<Review> = emptyList(),
+    val poolType: PoolType = PoolType.UNKNOWN
 ) {
     val photoUrl: String?
         get() = photoUrls.firstOrNull()
