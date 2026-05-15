@@ -1,5 +1,7 @@
 package com.burixer85.piscinamap.core.presentation.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,7 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -56,6 +58,7 @@ fun PoolDetailCard(
     val isDark = isSystemInDarkTheme()
     val star = if (isDark) AbyssalStar else DaylightStar
     val textMute = if (isDark) AbyssalTextMute else DaylightTextMute
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -194,7 +197,12 @@ fun PoolDetailCard(
                     .height(50.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(cs.primary)
-                    .clickable { onNavigateToDetail(pool.id) },
+                    .clickable {
+                        val uri = Uri.parse(
+                            "https://www.google.com/maps/dir/?api=1&destination=${pool.latitude},${pool.longitude}"
+                        )
+                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -202,7 +210,7 @@ fun PoolDetailCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.DirectionsWalk,
+                        imageVector = Icons.Default.Directions,
                         contentDescription = null,
                         tint = cs.onPrimary,
                         modifier = Modifier.size(18.dp)
