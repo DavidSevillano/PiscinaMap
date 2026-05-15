@@ -167,7 +167,15 @@ fun PoolDetailContent(
             ) {
                 IconBtn(icon = Icons.AutoMirrored.Filled.ArrowBack, size = 20, onClick = onBack)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconBtn(icon = Icons.Default.Share, size = 18, onClick = {})
+                    IconBtn(icon = Icons.Default.Share, size = 18, onClick = {
+                        val mapsUrl = "https://www.google.com/maps/search/?api=1&query=${pool.latitude},${pool.longitude}"
+                        val shareText = "${pool.name}\n${pool.address}\n$mapsUrl"
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(intent, getString(context, R.string.share_pool)))
+                    })
                     IconBtn(icon = Icons.Default.MoreVert, size = 18, onClick = onMoreClick)
                 }
             }
