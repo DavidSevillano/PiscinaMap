@@ -117,10 +117,16 @@ internal fun DetailContent(
 
             uiState.pool != null -> {
                 if (isHidden) {
-                    Text(
-                        text = getString(context, R.string.pool_hidden),
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = getString(context, R.string.pool_hidden))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = onUnhidePool) {
+                            Text(text = getString(context, R.string.unhide_pool))
+                        }
+                    }
                 } else {
                     PoolDetailContent(
                         pool = uiState.pool.copy(isHidden = isHidden),
