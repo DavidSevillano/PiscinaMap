@@ -13,4 +13,7 @@ data object HomeRouteNav : PiscinaRoute()
 data object ExploreRouteNav : PiscinaRoute()
 
 @Serializable
+data object FavoritesRouteNav : PiscinaRoute()
+
+@Serializable
 data class DetailRouteNav(val poolId: String) : PiscinaRoute()

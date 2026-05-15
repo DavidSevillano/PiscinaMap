@@ -7,6 +7,7 @@ import com.burixer85.piscinamap.core.data.GooglePlacesApi
 import com.burixer85.piscinamap.core.data.dto.toDomain
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
+import com.burixer85.piscinamap.core.presentation.util.FavoritesManager
 import com.burixer85.piscinamap.features.explore.domain.repository.ExploreRepository
 import java.util.Locale
 import javax.inject.Inject
@@ -59,7 +60,8 @@ class ExploreRepositoryImpl @Inject constructor(
                 }
                 .map { place ->
                     val isHidden = HiddenPoolsManager.isHidden(context, place.placeId)
-                    place.toDomain().copy(isHidden = isHidden)
+                    val isFavorite = FavoritesManager.isFavorite(context, place.placeId)
+                    place.toDomain().copy(isHidden = isHidden, isFavorite = isFavorite)
                 }
 
             Result.success(pools)

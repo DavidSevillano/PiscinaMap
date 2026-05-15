@@ -55,6 +55,8 @@ import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDia
 import com.burixer85.piscinamap.core.presentation.components.PoolDetailCard
 import com.burixer85.piscinamap.core.presentation.components.PoolSearchBar
 import com.burixer85.piscinamap.core.presentation.components.SearchAreaButton
+import com.burixer85.piscinamap.core.presentation.util.FavoritesManager
+import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
 import com.burixer85.piscinamap.core.presentation.util.bitmapDescriptorFromVector
 import com.burixer85.piscinamap.ui.theme.AbyssalBorder
 import com.burixer85.piscinamap.ui.theme.AbyssalSurfaceHi
@@ -260,13 +262,14 @@ fun HomeScreen(
                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
 
                 uiState.pools.forEach { pool ->
-                    val isSelected by remember(selectedPool, pool.id, pool.isHidden) {
+                    val isSelected by remember(selectedPool, pool.id, pool.isHidden, pool.isFavorite) {
                         derivedStateOf { selectedPool?.id == pool.id }
                     }
 
                     val icon = when {
                         isSelected -> poolIconSelected
                         pool.isHidden -> poolIconHidden
+                        pool.isFavorite -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
                         pool.isNew -> poolIconHighlighted
                         else -> poolIconNormal
                     }
@@ -348,13 +351,21 @@ fun HomeScreen(
             exit = fadeOut() + shrinkVertically()
         ) {
             lastSelectedPool?.let { pool ->
+                val currentSelectedPool = uiState.pools.find { it.id == pool.id } ?: pool
                 PoolDetailCard(
-                    pool = pool,
+                    pool = currentSelectedPool,
                     onClose = { selectedPool = null },
                     onNavigateToDetail = { id ->
                         focusManager.clearFocus()
                         CameraStateHolder.isNavigatingToDetail = true
                         onNavigateToDetail(id)
+                    },
+                    isFavorite = currentSelectedPool.isFavorite,
+                    onFavoriteToggle = {
+                        val newState = !currentSelectedPool.isFavorite
+                        if (newState) FavoritesManager.addFavorite(context, currentSelectedPool.id)
+                        else FavoritesManager.removeFavorite(context, currentSelectedPool.id)
+                        PoolStateManager.emitFavoriteStateChange(currentSelectedPool.id, newState)
                     }
                 )
             }

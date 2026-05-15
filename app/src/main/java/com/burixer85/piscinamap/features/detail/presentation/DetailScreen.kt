@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.core.presentation.components.PoolDetailContent
 import com.burixer85.piscinamap.core.presentation.components.ShimmerPlaceholder
+import com.burixer85.piscinamap.core.presentation.util.FavoritesManager
 import com.burixer85.piscinamap.core.presentation.util.HiddenPoolsManager
 import com.burixer85.piscinamap.core.presentation.util.LocaleHelper.getString
 import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
@@ -51,10 +52,14 @@ fun DetailScreen(
     var isHidden by remember(poolId) {
         mutableStateOf(HiddenPoolsManager.isHidden(context, poolId))
     }
+    var isFavorite by remember(poolId) {
+        mutableStateOf(FavoritesManager.isFavorite(context, poolId))
+    }
 
     DetailContent(
         uiState = uiState,
         isHidden = isHidden,
+        isFavorite = isFavorite,
         showMenu = showMenu,
         onRetry = viewModel::retry,
         onCallClick = { phone ->
@@ -82,6 +87,16 @@ fun DetailScreen(
             }
         },
         onDismissMenu = { showMenu = false },
+        onFavoriteToggle = {
+            val newState = !isFavorite
+            if (newState) {
+                FavoritesManager.addFavorite(context, poolId)
+            } else {
+                FavoritesManager.removeFavorite(context, poolId)
+            }
+            isFavorite = newState
+            PoolStateManager.emitFavoriteStateChange(poolId, newState)
+        },
     )
 }
 
@@ -89,6 +104,7 @@ fun DetailScreen(
 internal fun DetailContent(
     uiState: DetailUiState,
     isHidden: Boolean = false,
+    isFavorite: Boolean = false,
     showMenu: Boolean = false,
     onRetry: () -> Unit = {},
     onCallClick: (String) -> Unit = {},
@@ -97,6 +113,7 @@ internal fun DetailContent(
     onHidePool: () -> Unit = {},
     onUnhidePool: () -> Unit = {},
     onDismissMenu: () -> Unit = {},
+    onFavoriteToggle: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -133,6 +150,8 @@ internal fun DetailContent(
                         onCallClick = onCallClick,
                         onBack = onBack,
                         onMoreClick = onMoreClick,
+                        isFavorite = isFavorite,
+                        onFavoriteToggle = onFavoriteToggle,
                     )
                 }
             }

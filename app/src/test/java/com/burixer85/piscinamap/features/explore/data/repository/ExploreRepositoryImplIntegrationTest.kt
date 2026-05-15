@@ -33,9 +33,11 @@ class ExploreRepositoryImplIntegrationTest {
 
         mockSharedPrefs = mockk()
         every { mockSharedPrefs.getStringSet("hidden_pool_ids", emptySet()) } returns emptySet()
+        every { mockSharedPrefs.getStringSet("favorite_pool_ids", emptySet()) } returns emptySet()
 
         mockContext = mockk()
         every { mockContext.getSharedPreferences("hidden_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
+        every { mockContext.getSharedPreferences("favorite_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
 
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
         val api = Retrofit.Builder()
@@ -166,6 +168,72 @@ class ExploreRepositoryImplIntegrationTest {
 
         assertTrue("ExploreRepository does not check status, should succeed with empty list", result.isSuccess)
         assertTrue(result.getOrThrow().isEmpty())
+    }
+
+    @Test
+    fun `searchNearbyPools marks pool as favorite when id is in favorite set`() = runTest {
+        every { mockSharedPrefs.getStringSet("favorite_pool_ids", emptySet()) } returns setOf("id_pool_1")
+
+        mockWebServer.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """
+                {
+                  "status": "OK",
+                  "results": [
+                    {
+                      "place_id": "id_pool_1",
+                      "name": "Piscina Favorita",
+                      "vicinity": "Calle Favorita",
+                      "geometry": { "location": { "lat": 37.0, "lng": -5.0 } }
+                    },
+                    {
+                      "place_id": "id_pool_2",
+                      "name": "Piscina Normal",
+                      "vicinity": "Calle Normal",
+                      "geometry": { "location": { "lat": 37.1, "lng": -5.1 } }
+                    }
+                  ]
+                }
+                """.trimIndent()
+            )
+        )
+
+        val result = repository.searchNearbyPools(37.0, -5.0, 50000)
+
+        assertTrue(result.isSuccess)
+        val pools = result.getOrThrow()
+        val favorite = pools.find { it.id == "id_pool_1" }
+        val normal = pools.find { it.id == "id_pool_2" }
+        assertTrue(favorite?.isFavorite == true)
+        assertFalse(normal?.isFavorite == true)
+    }
+
+    @Test
+    fun `searchNearbyPools pool is not favorite when id is not in favorite set`() = runTest {
+        mockWebServer.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """
+                {
+                  "status": "OK",
+                  "results": [
+                    {
+                      "place_id": "id_pool_1",
+                      "name": "Piscina Visible",
+                      "vicinity": "Calle Visible",
+                      "geometry": { "location": { "lat": 37.0, "lng": -5.0 } }
+                    }
+                  ]
+                }
+                """.trimIndent()
+            )
+        )
+
+        val result = repository.searchNearbyPools(37.0, -5.0, 50000)
+
+        assertTrue(result.isSuccess)
+        val pools = result.getOrThrow()
+        assertTrue("Expected at least one pool in result", pools.isNotEmpty())
+        assertFalse(pools.first().isFavorite)
     }
 
     @Test

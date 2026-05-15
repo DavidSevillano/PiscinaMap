@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
@@ -116,5 +117,47 @@ class DetailContentTest {
             }
         }
         rule.onNodeWithText(ctx.getString(R.string.unhide_pool)).assertIsDisplayed()
+    }
+
+    @Test
+    fun showsFavoriteBorderIcon_whenNotFavorited() {
+        rule.setContent {
+            PiscinaMapTheme {
+                DetailContent(
+                    uiState = DetailUiState(pool = TestData.pool),
+                    isFavorite = false,
+                )
+            }
+        }
+        rule.onNodeWithContentDescription(ctx.getString(R.string.add_to_favorites)).assertIsDisplayed()
+    }
+
+    @Test
+    fun showsFilledFavoriteIcon_whenFavorited() {
+        rule.setContent {
+            PiscinaMapTheme {
+                DetailContent(
+                    uiState = DetailUiState(pool = TestData.pool),
+                    isFavorite = true,
+                )
+            }
+        }
+        rule.onNodeWithContentDescription(ctx.getString(R.string.remove_from_favorites)).assertIsDisplayed()
+    }
+
+    @Test
+    fun invokesFavoriteToggle_whenHeartIconClicked() {
+        var toggled = false
+        rule.setContent {
+            PiscinaMapTheme {
+                DetailContent(
+                    uiState = DetailUiState(pool = TestData.pool),
+                    isFavorite = false,
+                    onFavoriteToggle = { toggled = true },
+                )
+            }
+        }
+        rule.onNodeWithContentDescription(ctx.getString(R.string.add_to_favorites)).performClick()
+        assert(toggled)
     }
 }

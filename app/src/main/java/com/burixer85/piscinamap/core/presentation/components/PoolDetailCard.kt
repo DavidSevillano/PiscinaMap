@@ -20,9 +20,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +55,9 @@ fun PoolDetailCard(
     pool: Pool,
     onClose: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean = false,
+    onFavoriteToggle: () -> Unit = {}
 ) {
     val cs = MaterialTheme.colorScheme
     val isDark = isSystemInDarkTheme()
@@ -239,6 +244,27 @@ fun PoolDetailCard(
                     tint = cs.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(cs.surface)
+                    .border(1.dp, cs.outlineVariant, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onFavoriteToggle) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite)
+                            stringResource(R.string.remove_from_favorites)
+                        else
+                            stringResource(R.string.add_to_favorites),
+                        tint = if (isFavorite) cs.error else cs.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

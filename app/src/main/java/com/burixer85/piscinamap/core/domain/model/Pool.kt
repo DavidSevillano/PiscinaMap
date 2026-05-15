@@ -11,6 +11,7 @@ data class Pool(
     val photoUrls: List<String> = emptyList(),
     val isNew: Boolean = false,
     val isHidden: Boolean = false,
+    val isFavorite: Boolean = false,
     val formattedPhone: String? = null,
     val openingHours: List<String> = emptyList(),
     val currentOpeningHours: String? = null,

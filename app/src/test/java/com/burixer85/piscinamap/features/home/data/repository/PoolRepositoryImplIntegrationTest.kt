@@ -33,9 +33,11 @@ class PoolRepositoryImplIntegrationTest {
 
         mockSharedPrefs = mockk()
         every { mockSharedPrefs.getStringSet("hidden_pool_ids", emptySet()) } returns emptySet()
+        every { mockSharedPrefs.getStringSet("favorite_pool_ids", emptySet()) } returns emptySet()
 
         mockContext = mockk()
         every { mockContext.getSharedPreferences("hidden_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
+        every { mockContext.getSharedPreferences("favorite_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
 
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
         val api = Retrofit.Builder()
@@ -119,6 +121,29 @@ class PoolRepositoryImplIntegrationTest {
 
         assertTrue(result.isSuccess)
         assertFalse(result.getOrThrow().first().isHidden)
+    }
+
+    @Test
+    fun `searchNearbyPools marks pool as favorite when id is in favorite set`() = runTest {
+        every { mockSharedPrefs.getStringSet("favorite_pool_ids", emptySet()) } returns setOf("ChIJvalid1")
+
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(NEARBY_OK_RESPONSE))
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 2500)
+
+        assertTrue(result.isSuccess)
+        val pool = result.getOrThrow().first()
+        assertTrue(pool.isFavorite)
+    }
+
+    @Test
+    fun `searchNearbyPools pool is not favorite when id is not in favorite set`() = runTest {
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(NEARBY_OK_RESPONSE))
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 2500)
+
+        assertTrue(result.isSuccess)
+        assertFalse(result.getOrThrow().first().isFavorite)
     }
 
     @Test

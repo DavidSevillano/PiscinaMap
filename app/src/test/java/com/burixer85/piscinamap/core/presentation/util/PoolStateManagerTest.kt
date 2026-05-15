@@ -8,16 +8,24 @@ import org.junit.Test
 class PoolStateManagerTest {
 
     private val registeredListeners = mutableListOf<(String, Boolean) -> Unit>()
+    private val registeredFavoriteListeners = mutableListOf<(String, Boolean) -> Unit>()
 
     @After
     fun tearDown() {
         registeredListeners.forEach { PoolStateManager.unsubscribe(it) }
         registeredListeners.clear()
+        registeredFavoriteListeners.forEach { PoolStateManager.unsubscribeFavorite(it) }
+        registeredFavoriteListeners.clear()
     }
 
     private fun subscribe(listener: (String, Boolean) -> Unit) {
         PoolStateManager.subscribe(listener)
         registeredListeners.add(listener)
+    }
+
+    private fun subscribeFavorite(listener: (String, Boolean) -> Unit) {
+        PoolStateManager.subscribeFavorite(listener)
+        registeredFavoriteListeners.add(listener)
     }
 
     @Test
@@ -103,5 +111,48 @@ class PoolStateManagerTest {
         assertEquals("p1" to true, received[0])
         assertEquals("p2" to false, received[1])
         assertEquals("p1" to false, received[2])
+    }
+
+    @Test
+    fun `subscribed favorite listener receives emitted favorite state change`() {
+        val received = mutableListOf<Pair<String, Boolean>>()
+        subscribeFavorite { poolId, isFav -> received.add(poolId to isFav) }
+
+        PoolStateManager.emitFavoriteStateChange("pool1", true)
+
+        assertEquals(1, received.size)
+        assertEquals("pool1" to true, received[0])
+    }
+
+    @Test
+    fun `unsubscribed favorite listener does not receive events`() {
+        val received = mutableListOf<String>()
+        val listener: (String, Boolean) -> Unit = { poolId, _ -> received.add(poolId) }
+
+        PoolStateManager.subscribeFavorite(listener)
+        PoolStateManager.unsubscribeFavorite(listener)
+        PoolStateManager.emitFavoriteStateChange("pool1", true)
+
+        assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `favorite listeners do not receive hidden state events`() {
+        val favReceived = mutableListOf<String>()
+        subscribeFavorite { poolId, _ -> favReceived.add(poolId) }
+
+        PoolStateManager.emitHiddenStateChange("pool1", true)
+
+        assertTrue(favReceived.isEmpty())
+    }
+
+    @Test
+    fun `hidden listeners do not receive favorite state events`() {
+        val hiddenReceived = mutableListOf<String>()
+        subscribe { poolId, _ -> hiddenReceived.add(poolId) }
+
+        PoolStateManager.emitFavoriteStateChange("pool1", true)
+
+        assertTrue(hiddenReceived.isEmpty())
     }
 }

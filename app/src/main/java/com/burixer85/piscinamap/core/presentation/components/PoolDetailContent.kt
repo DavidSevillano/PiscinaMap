@@ -37,6 +37,8 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocalPhone
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
@@ -81,7 +83,9 @@ fun PoolDetailContent(
     onCallClick: (String) -> Unit,
     onBack: () -> Unit,
     onMoreClick: () -> Unit,
-    onHideClick: (() -> Unit)? = null
+    onHideClick: (() -> Unit)? = null,
+    isFavorite: Boolean = false,
+    onFavoriteToggle: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val cs = MaterialTheme.colorScheme
@@ -176,6 +180,15 @@ fun PoolDetailContent(
                         }
                         context.startActivity(Intent.createChooser(intent, getString(context, R.string.share_pool)))
                     })
+                    IconBtn(
+                        icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        size = 18,
+                        onClick = onFavoriteToggle,
+                        contentDescription = if (isFavorite)
+                            getString(context, R.string.remove_from_favorites)
+                        else
+                            getString(context, R.string.add_to_favorites)
+                    )
                     IconBtn(icon = Icons.Default.MoreVert, size = 18, onClick = onMoreClick)
                 }
             }
@@ -600,7 +613,8 @@ fun PoolDetailContent(
 private fun IconBtn(
     icon: ImageVector,
     size: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    contentDescription: String? = null
 ) {
     Box(
         modifier = Modifier
@@ -613,7 +627,7 @@ private fun IconBtn(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = Color.White,
             modifier = Modifier.size(size.dp)
         )

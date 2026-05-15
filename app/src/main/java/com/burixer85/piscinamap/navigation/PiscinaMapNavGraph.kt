@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +47,7 @@ import com.burixer85.piscinamap.features.detail.presentation.DetailScreen
 import com.burixer85.piscinamap.features.detail.presentation.DetailViewModel
 import com.burixer85.piscinamap.features.explore.presentation.ExploreScreen
 import com.burixer85.piscinamap.features.home.presentation.CameraStateHolder
+import com.burixer85.piscinamap.features.favorites.presentation.FavoritesScreen
 import com.burixer85.piscinamap.features.home.presentation.HomeScreen
 
 @Composable
@@ -57,7 +59,7 @@ fun PiscinaMapNavGraph(
 
     val currentRoute = backStack.lastOrNull()
 
-    val showBottomBar = currentRoute is HomeRouteNav || currentRoute is ExploreRouteNav
+    val showBottomBar = currentRoute is HomeRouteNav || currentRoute is ExploreRouteNav || currentRoute is FavoritesRouteNav
 
     Box(modifier = modifier.fillMaxSize()) {
         NavDisplay(
@@ -80,6 +82,16 @@ fun PiscinaMapNavGraph(
                 }
                 entry<ExploreRouteNav> {
                     ExploreScreen(
+                        onNavigateToDetail = { poolId ->
+                            CameraStateHolder.isNavigatingToDetail = true
+                            navCounter++
+                            backStack.add(DetailRouteNav(poolId))
+                        },
+                        bottomPadding = 130
+                    )
+                }
+                entry<FavoritesRouteNav> {
+                    FavoritesScreen(
                         onNavigateToDetail = { poolId ->
                             CameraStateHolder.isNavigatingToDetail = true
                             navCounter++
@@ -226,6 +238,32 @@ fun PiscinaMapNavGraph(
                                 }
                             } else if (existingExploreIndex == -1) {
                                 backStack.add(ExploreRouteNav)
+                            }
+                        }
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(28.dp)
+                            .background(cs.outline)
+                    )
+
+                    val isFavoritesActive = currentRoute is FavoritesRouteNav
+                    NavItem(
+                        icon = Icons.Default.Favorite,
+                        label = stringResource(R.string.favorites),
+                        isActive = isFavoritesActive,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            val existingFavoritesIndex =
+                                backStack.indexOfFirst { it is FavoritesRouteNav }
+                            if (existingFavoritesIndex != -1 && existingFavoritesIndex != backStack.lastIndex) {
+                                while (backStack.lastIndex > existingFavoritesIndex) {
+                                    backStack.removeLastOrNull()
+                                }
+                            } else if (existingFavoritesIndex == -1) {
+                                backStack.add(FavoritesRouteNav)
                             }
                         }
                     )

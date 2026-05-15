@@ -53,13 +53,19 @@ class HomeViewModel @Inject constructor(
         updatePoolHiddenState(poolId, isHidden)
     }
 
+    private val favoriteStateListener: (String, Boolean) -> Unit = { poolId, isFavorite ->
+        updatePoolFavoriteState(poolId, isFavorite)
+    }
+
     init {
         PoolStateManager.subscribe(hiddenStateListener)
+        PoolStateManager.subscribeFavorite(favoriteStateListener)
     }
 
     override fun onCleared() {
         super.onCleared()
         PoolStateManager.unsubscribe(hiddenStateListener)
+        PoolStateManager.unsubscribeFavorite(favoriteStateListener)
     }
 
     fun onMapMoved(currentCenter: LatLng, isCameraMoving: Boolean) {
@@ -303,6 +309,15 @@ fun fetchPools(
                 } else {
                     pool
                 }
+            }
+            currentState.copy(pools = updatedPools)
+        }
+    }
+
+    private fun updatePoolFavoriteState(poolId: String, isFavorite: Boolean) {
+        _uiState.update { currentState ->
+            val updatedPools = currentState.pools.map { pool ->
+                if (pool.id == poolId) pool.copy(isFavorite = isFavorite) else pool
             }
             currentState.copy(pools = updatedPools)
         }
