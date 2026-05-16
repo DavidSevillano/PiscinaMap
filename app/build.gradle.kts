@@ -198,6 +198,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
