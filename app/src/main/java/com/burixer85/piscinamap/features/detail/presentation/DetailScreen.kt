@@ -75,6 +75,7 @@ fun DetailScreen(
                 HiddenPoolsManager.hidePool(context, poolId)
                 isHidden = true
                 PoolStateManager.emitHiddenStateChange(poolId, true)
+                viewModel.onPoolHidden(poolId)
             }
         },
         onUnhidePool = {
@@ -84,6 +85,7 @@ fun DetailScreen(
                 HiddenPoolsManager.showPool(context, poolId)
                 isHidden = false
                 PoolStateManager.emitHiddenStateChange(poolId, false)
+                viewModel.onPoolUnhidden(poolId)
             }
         },
         onDismissMenu = { showMenu = false },
@@ -96,6 +98,7 @@ fun DetailScreen(
             }
             isFavorite = newState
             PoolStateManager.emitFavoriteStateChange(poolId, newState)
+            viewModel.onFavoriteToggled(poolId, newState)
         },
     )
 }

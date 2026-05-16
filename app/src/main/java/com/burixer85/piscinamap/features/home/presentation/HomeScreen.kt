@@ -366,6 +366,7 @@ fun HomeScreen(
                         if (newState) FavoritesManager.addFavorite(context, currentSelectedPool.id)
                         else FavoritesManager.removeFavorite(context, currentSelectedPool.id)
                         PoolStateManager.emitFavoriteStateChange(currentSelectedPool.id, newState)
+                        viewModel.onFavoriteToggled(currentSelectedPool.id, newState)
                     }
                 )
             }

@@ -1,9 +1,11 @@
 package com.burixer85.piscinamap.features.explore.presentation
 
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.features.explore.domain.usecases.GetExploreNearbyPoolsUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -24,6 +26,7 @@ class ExploreViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var useCase: GetExploreNearbyPoolsUseCase
+    private lateinit var analytics: AnalyticsManager
     private lateinit var viewModel: ExploreViewModel
 
     private fun makePool(id: String) = Pool(
@@ -40,7 +43,8 @@ class ExploreViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         useCase = mockk()
-        viewModel = ExploreViewModel(useCase)
+        analytics = mockk(relaxed = true)
+        viewModel = ExploreViewModel(useCase, analytics)
     }
 
     @After
@@ -156,5 +160,38 @@ class ExploreViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isLoadingMore)
         assertEquals("Load more failed", state.error)
+    }
+
+    @Test
+    fun `fetchPools tracks ExploreScreen`() = runTest {
+        coEvery { useCase(any(), any(), any()) } returns Result.success(emptyList())
+
+        viewModel.fetchPools(40.0, -3.0)
+
+        verify { analytics.trackScreen("ExploreScreen") }
+    }
+
+    @Test
+    fun `fetchPools tracks map_area_searched with coordinates`() = runTest {
+        coEvery { useCase(any(), any(), any()) } returns Result.success(emptyList())
+
+        viewModel.fetchPools(40.4168, -3.7038)
+
+        verify {
+            analytics.trackEvent(
+                "map_area_searched",
+                mapOf("latitude" to "40.4168", "longitude" to "-3.7038")
+            )
+        }
+    }
+
+    @Test
+    fun `fetchPools logs non-fatal error on failure`() = runTest {
+        val exception = Exception("timeout")
+        coEvery { useCase(any(), any(), any()) } returns Result.failure(exception)
+
+        viewModel.fetchPools(40.0, -3.0)
+
+        verify { analytics.logNonFatalError(exception) }
     }
 }

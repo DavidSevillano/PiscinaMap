@@ -3,6 +3,7 @@ package com.burixer85.piscinamap.features.favorites.presentation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.FavoritesManager
 import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
@@ -26,6 +27,7 @@ data class FavoritesUiState(
 class FavoritesViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val detailRepository: DetailRepository,
+    private val analytics: AnalyticsManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FavoritesUiState(isLoading = true))
@@ -38,6 +40,7 @@ class FavoritesViewModel @Inject constructor(
     }
 
     init {
+        analytics.trackScreen("FavoritesScreen")
         PoolStateManager.subscribeFavorite(favoriteStateListener)
         loadFavorites()
     }
