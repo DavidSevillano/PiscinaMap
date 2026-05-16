@@ -1,5 +1,7 @@
 package com.burixer85.piscinamap.core.domain.model
 
+import kotlinx.serialization.Serializable
+
 data class Pool(
     val id: String,
     val name: String,
@@ -23,6 +25,7 @@ data class Pool(
         get() = photoUrls.firstOrNull()
 }
 
+@Serializable
 data class Review(
     val authorName: String,
     val rating: Float,

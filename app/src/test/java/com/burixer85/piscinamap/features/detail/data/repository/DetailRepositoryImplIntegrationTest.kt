@@ -1,7 +1,13 @@
 package com.burixer85.piscinamap.features.detail.data.repository
 
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
+import com.burixer85.piscinamap.core.data.local.db.PoolDetailCacheDao
+import com.burixer85.piscinamap.core.data.local.entity.PoolDetailCacheEntity
+import com.burixer85.piscinamap.core.domain.model.Review
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -19,11 +25,16 @@ class DetailRepositoryImplIntegrationTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var repository: DetailRepositoryImpl
+    private lateinit var mockDetailCacheDao: PoolDetailCacheDao
 
     @Before
     fun setUp() {
         mockWebServer = MockWebServer()
         mockWebServer.start()
+
+        mockDetailCacheDao = mockk(relaxed = true)
+        coEvery { mockDetailCacheDao.getDetail(any(), any()) } returns null
+        coEvery { mockDetailCacheDao.getDetailIgnoringTtl(any()) } returns null
 
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
         val api = Retrofit.Builder()
@@ -32,12 +43,12 @@ class DetailRepositoryImplIntegrationTest {
             .build()
             .create(GooglePlacesApi::class.java)
 
-        repository = DetailRepositoryImpl(api)
+        repository = DetailRepositoryImpl(api, mockDetailCacheDao)
     }
 
     @After
     fun tearDown() {
-        mockWebServer.shutdown()
+        try { mockWebServer.shutdown() } catch (_: Exception) {}
     }
 
     @Test
@@ -138,6 +149,70 @@ class DetailRepositoryImplIntegrationTest {
         assertTrue(pool.reviews.isEmpty())
         assertTrue(pool.photoUrls.isEmpty())
         assertTrue(pool.openingHours.isEmpty())
+    }
+
+    @Test
+    fun `getPoolDetails returns cached detail when cache is fresh without calling API`() = runTest {
+        val now = System.currentTimeMillis()
+        val cachedDetail = PoolDetailCacheEntity(
+            placeId = "ChIJcached", name = "Piscina Cacheada", latitude = 37.388, longitude = -5.982,
+            address = "Calle Cache 1", rating = 4.1f, isOpenNow = true,
+            photoUrls = listOf("url_cached"), openingHours = listOf("Lunes: 9-21"),
+            currentOpeningHours = "9:00 - 21:00", services = listOf("Piscina"),
+            reviews = listOf(Review("María", 4f, "Muy bien", "hace 3 días")),
+            formattedPhone = "+34 900 111 222", cachedAt = now
+        )
+        coEvery { mockDetailCacheDao.getDetail(eq("ChIJcached"), any()) } returns cachedDetail
+
+        val result = repository.getPoolDetails("ChIJcached")
+
+        assertTrue(result.isSuccess)
+        assertEquals("Piscina Cacheada", result.getOrThrow().name)
+        assertEquals("ChIJcached", result.getOrThrow().id)
+        assertEquals(1, result.getOrThrow().reviews.size)
+        assertEquals(0, mockWebServer.requestCount)
+    }
+
+    @Test
+    fun `getPoolDetails calls API when cache is stale and saves result`() = runTest {
+        coEvery { mockDetailCacheDao.getDetail(any(), any()) } returns null
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(DETAIL_OK_RESPONSE))
+
+        val result = repository.getPoolDetails("ChIJtest123")
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, mockWebServer.requestCount)
+        coVerify { mockDetailCacheDao.insertDetail(any()) }
+    }
+
+    @Test
+    fun `getPoolDetails returns stale cache when API fails`() = runTest {
+        val staleDetail = PoolDetailCacheEntity(
+            placeId = "ChIJstale", name = "Piscina Stale", latitude = 37.388, longitude = -5.982,
+            address = "Calle Vieja 1", rating = 3.8f, isOpenNow = null,
+            photoUrls = emptyList(), openingHours = emptyList(),
+            currentOpeningHours = null, services = emptyList(),
+            reviews = emptyList(), formattedPhone = null, cachedAt = 1L
+        )
+        coEvery { mockDetailCacheDao.getDetail(any(), any()) } returns null
+        coEvery { mockDetailCacheDao.getDetailIgnoringTtl("ChIJstale") } returns staleDetail
+        mockWebServer.shutdown()
+
+        val result = repository.getPoolDetails("ChIJstale")
+
+        assertTrue(result.isSuccess)
+        assertEquals("Piscina Stale", result.getOrThrow().name)
+    }
+
+    @Test
+    fun `getPoolDetails returns failure when API fails and there is no cache at all`() = runTest {
+        coEvery { mockDetailCacheDao.getDetail(any(), any()) } returns null
+        coEvery { mockDetailCacheDao.getDetailIgnoringTtl(any()) } returns null
+        mockWebServer.shutdown()
+
+        val result = repository.getPoolDetails("ChIJnocache")
+
+        assertTrue(result.isFailure)
     }
 
     companion object {

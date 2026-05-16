@@ -2,12 +2,14 @@ package com.burixer85.piscinamap.core.di
 
 import android.content.Context
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
-import com.burixer85.piscinamap.features.home.data.repository.PoolRepositoryImpl
-import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
+import com.burixer85.piscinamap.core.data.local.db.PoolCacheDao
+import com.burixer85.piscinamap.core.data.local.db.PoolDetailCacheDao
 import com.burixer85.piscinamap.features.detail.data.repository.DetailRepositoryImpl
 import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
 import com.burixer85.piscinamap.features.explore.data.repository.ExploreRepositoryImpl
 import com.burixer85.piscinamap.features.explore.domain.repository.ExploreRepository
+import com.burixer85.piscinamap.features.home.data.repository.PoolRepositoryImpl
+import com.burixer85.piscinamap.features.home.domain.repository.PoolRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -31,7 +33,6 @@ object NetworkModule {
             coerceInputValues = true
             isLenient = true
         }
-
         return Retrofit.Builder()
             .baseUrl("https://maps.googleapis.com/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
@@ -41,19 +42,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providePoolRepository(api: GooglePlacesApi, @ApplicationContext context: Context): PoolRepository {
-        return PoolRepositoryImpl(api, context)
-    }
+    fun providePoolRepository(
+        api: GooglePlacesApi,
+        @ApplicationContext context: Context,
+        poolCacheDao: PoolCacheDao
+    ): PoolRepository = PoolRepositoryImpl(api, context, poolCacheDao)
 
     @Provides
     @Singleton
-    fun provideDetailRepository(api: GooglePlacesApi): DetailRepository {
-        return DetailRepositoryImpl(api)
-    }
+    fun provideDetailRepository(
+        api: GooglePlacesApi,
+        poolDetailCacheDao: PoolDetailCacheDao
+    ): DetailRepository = DetailRepositoryImpl(api, poolDetailCacheDao)
 
     @Provides
     @Singleton
-    fun provideExploreRepository(api: GooglePlacesApi, @ApplicationContext context: Context): ExploreRepository {
-        return ExploreRepositoryImpl(api, context)
-    }
+    fun provideExploreRepository(
+        api: GooglePlacesApi,
+        @ApplicationContext context: Context,
+        poolCacheDao: PoolCacheDao
+    ): ExploreRepository = ExploreRepositoryImpl(api, context, poolCacheDao)
 }

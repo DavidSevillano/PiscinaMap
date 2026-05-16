@@ -3,7 +3,11 @@ package com.burixer85.piscinamap.features.home.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
+import com.burixer85.piscinamap.core.data.local.db.PoolCacheDao
+import com.burixer85.piscinamap.core.data.local.entity.PoolCacheEntity
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -25,6 +29,7 @@ class PoolRepositoryImplIntegrationTest {
     private lateinit var repository: PoolRepositoryImpl
     private lateinit var mockContext: Context
     private lateinit var mockSharedPrefs: SharedPreferences
+    private lateinit var mockPoolCacheDao: PoolCacheDao
 
     @Before
     fun setUp() {
@@ -39,6 +44,8 @@ class PoolRepositoryImplIntegrationTest {
         every { mockContext.getSharedPreferences("hidden_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
         every { mockContext.getSharedPreferences("favorite_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
 
+        mockPoolCacheDao = mockk(relaxed = true)
+
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
         val api = Retrofit.Builder()
             .baseUrl(mockWebServer.url("/"))
@@ -46,12 +53,12 @@ class PoolRepositoryImplIntegrationTest {
             .build()
             .create(GooglePlacesApi::class.java)
 
-        repository = PoolRepositoryImpl(api, mockContext)
+        repository = PoolRepositoryImpl(api, mockContext, mockPoolCacheDao)
     }
 
     @After
     fun tearDown() {
-        mockWebServer.shutdown()
+        try { mockWebServer.shutdown() } catch (_: Exception) {}
     }
 
     @Test
@@ -67,6 +74,7 @@ class PoolRepositoryImplIntegrationTest {
         assertEquals("ChIJvalid1", pools[0].id)
         assertEquals(4.2f, pools[0].rating)
         assertEquals(true, pools[0].isOpenNow)
+        coVerify { mockPoolCacheDao.insertPools(any()) }
     }
 
     @Test
@@ -203,6 +211,49 @@ class PoolRepositoryImplIntegrationTest {
 
         assertTrue(result.isSuccess)
         assertEquals("ChIJtest999", result.getOrThrow().id)
+    }
+
+    @Test
+    fun `searchNearbyPools returns cached pools when API throws exception`() = runTest {
+        val now = System.currentTimeMillis()
+        val cachedEntity = PoolCacheEntity(
+            "ChIJcached99", "Piscina Cacheada Mapa", 37.388, -5.982, "Calle Cache", 4.0f, true, now
+        )
+        coEvery { mockPoolCacheDao.getPoolsInBoundingBox(any(), any(), any(), any(), any()) } returns listOf(cachedEntity)
+        mockWebServer.shutdown()
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 2500)
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("Piscina Cacheada Mapa", result.getOrNull()?.first()?.name)
+        assertEquals("ChIJcached99", result.getOrNull()?.first()?.id)
+    }
+
+    @Test
+    fun `searchNearbyPools returns failure when API fails and cache is empty`() = runTest {
+        coEvery { mockPoolCacheDao.getPoolsInBoundingBox(any(), any(), any(), any(), any()) } returns emptyList()
+        mockWebServer.shutdown()
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 2500)
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `searchNearbyPools from cache honours hidden state`() = runTest {
+        val now = System.currentTimeMillis()
+        val cachedEntity = PoolCacheEntity(
+            "ChIJcached99", "Piscina Cacheada Mapa", 37.388, -5.982, "Calle Cache", 4.0f, true, now
+        )
+        coEvery { mockPoolCacheDao.getPoolsInBoundingBox(any(), any(), any(), any(), any()) } returns listOf(cachedEntity)
+        every { mockSharedPrefs.getStringSet("hidden_pool_ids", emptySet()) } returns setOf("ChIJcached99")
+        mockWebServer.shutdown()
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 2500)
+
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow().first().isHidden)
     }
 
     companion object {

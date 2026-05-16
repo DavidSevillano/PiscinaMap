@@ -3,7 +3,11 @@ package com.burixer85.piscinamap.features.explore.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
+import com.burixer85.piscinamap.core.data.local.db.PoolCacheDao
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.burixer85.piscinamap.core.data.local.entity.PoolCacheEntity
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -25,6 +29,7 @@ class ExploreRepositoryImplIntegrationTest {
     private lateinit var repository: ExploreRepositoryImpl
     private lateinit var mockContext: Context
     private lateinit var mockSharedPrefs: SharedPreferences
+    private lateinit var mockPoolCacheDao: PoolCacheDao
 
     @Before
     fun setUp() {
@@ -39,6 +44,8 @@ class ExploreRepositoryImplIntegrationTest {
         every { mockContext.getSharedPreferences("hidden_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
         every { mockContext.getSharedPreferences("favorite_pools", Context.MODE_PRIVATE) } returns mockSharedPrefs
 
+        mockPoolCacheDao = mockk(relaxed = true)
+
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
         val api = Retrofit.Builder()
             .baseUrl(mockWebServer.url("/"))
@@ -46,12 +53,12 @@ class ExploreRepositoryImplIntegrationTest {
             .build()
             .create(GooglePlacesApi::class.java)
 
-        repository = ExploreRepositoryImpl(api, mockContext)
+        repository = ExploreRepositoryImpl(api, mockContext, mockPoolCacheDao)
     }
 
     @After
     fun tearDown() {
-        mockWebServer.shutdown()
+        try { mockWebServer.shutdown() } catch (_: Exception) {}
     }
 
     @Test
@@ -283,6 +290,41 @@ class ExploreRepositoryImplIntegrationTest {
         assertTrue(result.isFailure)
     }
 
+    @Test
+    fun `searchNearbyPools saves pools to cache on API success`() = runTest {
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(NEARBY_OK_RESPONSE))
+
+        repository.searchNearbyPools(37.388, -5.982, 50000)
+
+        coVerify { mockPoolCacheDao.insertPools(any()) }
+    }
+
+    @Test
+    fun `searchNearbyPools returns cached pools when API throws exception`() = runTest {
+        val now = System.currentTimeMillis()
+        val cachedEntity = PoolCacheEntity(
+            "ChIJexplore1", "Piscina Explore Cache", 37.388, -5.982, "Calle Explorar", 4.3f, true, now
+        )
+        coEvery { mockPoolCacheDao.getPoolsInBoundingBox(any(), any(), any(), any(), any()) } returns listOf(cachedEntity)
+        mockWebServer.shutdown()
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 50000)
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+        assertEquals("Piscina Explore Cache", result.getOrNull()?.first()?.name)
+    }
+
+    @Test
+    fun `searchNearbyPools returns failure when API fails and cache is empty`() = runTest {
+        coEvery { mockPoolCacheDao.getPoolsInBoundingBox(any(), any(), any(), any(), any()) } returns emptyList()
+        mockWebServer.shutdown()
+
+        val result = repository.searchNearbyPools(37.388, -5.982, 50000)
+
+        assertTrue(result.isFailure)
+    }
+
     companion object {
         private val NEARBY_MIXED_RESPONSE = """
             {
@@ -313,5 +355,22 @@ class ExploreRepositoryImplIntegrationTest {
         """.trimIndent()
 
         private val EMPTY_RESPONSE = """{"status":"ZERO_RESULTS","results":[]}"""
+
+        private val NEARBY_OK_RESPONSE = """
+            {
+              "status": "OK",
+              "results": [
+                {
+                  "place_id": "ChIJexplore1",
+                  "name": "Piscina Olímpica Sur",
+                  "vicinity": "Av. Sur 10, Sevilla",
+                  "geometry": { "location": { "lat": 37.388, "lng": -5.982 } },
+                  "rating": 4.5,
+                  "opening_hours": { "open_now": true },
+                  "types": ["swimming_pool"]
+                }
+              ]
+            }
+        """.trimIndent()
     }
 }
