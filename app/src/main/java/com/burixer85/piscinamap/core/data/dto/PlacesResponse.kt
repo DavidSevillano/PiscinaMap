@@ -1,6 +1,7 @@
 package com.burixer85.piscinamap.core.data.dto
 
 import com.burixer85.piscinamap.core.domain.model.Pool
+import com.burixer85.piscinamap.core.domain.model.PoolType
 import com.burixer85.piscinamap.core.domain.model.Review
 import com.burixer85.piscinamap.core.presentation.util.PoolUtils
 import kotlinx.serialization.SerialName
@@ -57,7 +58,8 @@ fun PlaceDto.toDomain(): Pool {
         rating = this.rating,
         isOpenNow = this.openingHours?.openNow,
         photoUrls = this.photos?.map { it.photoReference } ?: emptyList(),
-        isNew = false
+        isNew = false,
+        poolType = types.toPoolType()
     )
 }
 
@@ -143,6 +145,14 @@ val weekdayText = this.openingHours?.weekdayText ?: emptyList()
                 language = it.language,
                 profilePhotoUrl = it.profilePhotoUrl
             )
-        } ?: emptyList()
+        } ?: emptyList(),
+        poolType = types.toPoolType()
     )
+}
+
+private fun List<String>.toPoolType(): PoolType = when {
+    any { it in listOf("lodging", "hotel", "resort_hotel", "motel") } -> PoolType.HOTEL
+    any { it in listOf("local_government_office", "city_hall", "municipal_government") } -> PoolType.MUNICIPAL
+    any { it in listOf("park", "sports_complex", "recreation_center", "swimming_pool") } -> PoolType.PUBLIC
+    else -> PoolType.UNKNOWN
 }

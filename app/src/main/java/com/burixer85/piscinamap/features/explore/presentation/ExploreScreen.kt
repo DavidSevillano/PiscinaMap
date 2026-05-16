@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.R
+import com.burixer85.piscinamap.core.domain.model.FilterState
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.components.ExitConfirmationDialog
 import com.burixer85.piscinamap.core.presentation.components.NativeAdCard
@@ -68,7 +70,7 @@ fun ExploreScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    val filteredPools by viewModel.filteredPools.collectAsStateWithLifecycle()
 
     var nativeAdList by remember { mutableStateOf<List<NativeAd>>(emptyList()) }
     var locationPermissionDecided by remember { mutableStateOf(false) }
@@ -104,14 +106,11 @@ fun ExploreScreen(
                     nativeAdList = nativeAdList + ad
                 }
                 .withAdListener(object : AdListener() {
-                    override fun onAdFailedToLoad(adError: LoadAdError) {
-                    }
+                    override fun onAdFailedToLoad(adError: LoadAdError) {}
                 })
                 .build()
-
             adLoader.loadAds(AdRequest.Builder().build(), 5)
-        } catch (e: Exception) {
-        }
+        } catch (e: Exception) {}
     }
 
     var initialLocationObtained by remember { mutableStateOf(false) }
@@ -122,6 +121,7 @@ fun ExploreScreen(
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
+                    viewModel.setUserLocation(it.latitude, it.longitude)
                     viewModel.fetchPools(it.latitude, it.longitude)
                 }
             }
@@ -130,6 +130,8 @@ fun ExploreScreen(
 
     ExploreContent(
         uiState = uiState,
+        filteredPools = filteredPools,
+        onFiltersChange = viewModel::updateFilter,
         onFetchMore = viewModel::fetchMorePools,
         onNavigateToDetail = onNavigateToDetail,
         nativeAdList = nativeAdList,
@@ -146,6 +148,8 @@ fun ExploreScreen(
 @Composable
 internal fun ExploreContent(
     uiState: ExploreUiState,
+    filteredPools: List<Pool>,
+    onFiltersChange: (FilterState) -> Unit,
     onFetchMore: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
     nativeAdList: List<NativeAd> = emptyList(),
@@ -163,9 +167,7 @@ internal fun ExploreContent(
     ) {
         when {
             uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
             uiState.error != null -> {
@@ -189,6 +191,11 @@ internal fun ExploreContent(
             }
 
             else -> {
+                val visiblePools = filteredPools.filter { pool ->
+                    !HiddenPoolsManager.isHidden(context, pool.id)
+                }
+                val hasActiveFilters = uiState.filters != FilterState()
+
                 Column(modifier = Modifier.fillMaxSize()) {
                     Row(
                         modifier = Modifier
@@ -215,83 +222,111 @@ internal fun ExploreContent(
                         )
                     }
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f),
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 16.dp,
-                            bottom = (16 + bottomPadding).dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val visiblePools = uiState.pools.filter { pool ->
-                            !HiddenPoolsManager.isHidden(context, pool.id)
-                        }
+                    Text(
+                        text = "${visiblePools.size} piscinas encontradas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
 
-                        var totalPoolsAdShown = 0
+                    FilterChipsRow(
+                        filters = uiState.filters,
+                        onFiltersChange = onFiltersChange,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-                        val itemList = buildList {
-                            var totalPools = 0
-                            visiblePools.forEachIndexed { _, pool ->
-                                add(pool)
-                                totalPools++
-
-                                val adPosition = 2 + (totalPoolsAdShown * 4)
-                                if (totalPools == adPosition && totalPools >= 2) {
-                                    add(totalPoolsAdShown)
-                                    totalPoolsAdShown++
-                                }
+                    if (visiblePools.isEmpty() && hasActiveFilters) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Sin resultados para estos filtros",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            TextButton(onClick = { onFiltersChange(FilterState()) }) {
+                                Text("Limpiar filtros")
                             }
                         }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 16.dp,
+                                bottom = (16 + bottomPadding).dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            var totalPoolsAdShown = 0
 
-                        items(itemList.size) { index ->
-                            val item = itemList[index]
-                            when (item) {
-                                is Pool -> {
-                                    PoolListCard(
-                                        pool = item,
-                                        onNavigateToDetail = onNavigateToDetail
-                                    )
-                                }
-                                is Int -> {
-                                    val adIndex = if (nativeAdList.isNotEmpty()) item % nativeAdList.size else 0
-                                    val adForPosition = nativeAdList.getOrNull(adIndex) ?: nativeAdList.firstOrNull()
-                                    NativeAdCard(
-                                        nativeAd = adForPosition,
-                                        ctaText = stringResource(R.string.see_more)
-                                    )
-                                }
-                            }
-                        }
+                            val itemList = buildList {
+                                var totalPools = 0
+                                visiblePools.forEachIndexed { _, pool ->
+                                    add(pool)
+                                    totalPools++
 
-                        item {
-                            if (!uiState.hasSearchedMore) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 4.dp, bottom = 16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (uiState.isLoadingMore) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                    } else {
-                                        Button(onClick = onFetchMore) {
-                                            Text(stringResource(R.string.search_more))
-                                        }
+                                    val adPosition = 2 + (totalPoolsAdShown * 4)
+                                    if (totalPools == adPosition && totalPools >= 2) {
+                                        add(totalPoolsAdShown)
+                                        totalPoolsAdShown++
                                     }
                                 }
-                            } else if (uiState.warning != null) {
-                                Text(
-                                    text = uiState.warning!!,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 16.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            }
+
+                            items(itemList.size) { index ->
+                                val item = itemList[index]
+                                when (item) {
+                                    is Pool -> {
+                                        PoolListCard(
+                                            pool = item,
+                                            onNavigateToDetail = onNavigateToDetail
+                                        )
+                                    }
+                                    is Int -> {
+                                        val adIndex = if (nativeAdList.isNotEmpty()) item % nativeAdList.size else 0
+                                        val adForPosition = nativeAdList.getOrNull(adIndex) ?: nativeAdList.firstOrNull()
+                                        NativeAdCard(
+                                            nativeAd = adForPosition,
+                                            ctaText = stringResource(R.string.see_more)
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                if (!uiState.hasSearchedMore) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp, bottom = 16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (uiState.isLoadingMore) {
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                        } else {
+                                            Button(onClick = onFetchMore) {
+                                                Text(stringResource(R.string.search_more))
+                                            }
+                                        }
+                                    }
+                                } else if (uiState.warning != null) {
+                                    Text(
+                                        text = uiState.warning!!,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 16.dp),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
