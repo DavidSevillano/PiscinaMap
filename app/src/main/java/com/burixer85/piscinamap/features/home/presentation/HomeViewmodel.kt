@@ -13,6 +13,7 @@ import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
 import com.burixer85.piscinamap.core.presentation.util.ViewModelHolder
 import com.burixer85.piscinamap.core.presentation.util.PoolUtils.getGooglePhotoUrl
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.features.home.domain.usecases.GetNearbyPoolsUseCase
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
@@ -34,7 +35,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getNearbyPoolsUseCase: GetNearbyPoolsUseCase
+    private val getNearbyPoolsUseCase: GetNearbyPoolsUseCase,
+    private val analytics: AnalyticsManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState(isLoading = true))
@@ -58,6 +60,7 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
+        analytics.trackScreen("HomeScreen")
         PoolStateManager.subscribe(hiddenStateListener)
         PoolStateManager.subscribeFavorite(favoriteStateListener)
     }
@@ -164,6 +167,7 @@ fun fetchPools(
                         }
                     },
                     onFailure = { error ->
+                        analytics.logNonFatalError(error)
                         _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                     }
                 )
@@ -179,6 +183,11 @@ fun fetchPools(
 
     fun onPredictionSelected(prediction: AutocompletePrediction, context: Context) {
         _uiState.update { it.copy(isLoading = true, predictions = emptyList()) }
+
+        analytics.trackEvent(
+            "search_performed",
+            mapOf("query" to prediction.getPrimaryText(null).toString())
+        )
 
         val placesClient = Places.createClient(context.applicationContext)
         val placeFields = listOf(Place.Field.NAME, Place.Field.LAT_LNG)
@@ -210,6 +219,7 @@ fun fetchPools(
                                     }
                                 },
                                 onFailure = { error ->
+                                    analytics.logNonFatalError(error)
                                     _uiState.update {
                                         it.copy(
                                             isLoading = false,
@@ -237,6 +247,7 @@ fun fetchPools(
                 }
             }
             .addOnFailureListener { exception ->
+                analytics.logNonFatalError(exception)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -321,6 +332,11 @@ fun fetchPools(
             }
             currentState.copy(pools = updatedPools)
         }
+    }
+
+    fun onFavoriteToggled(poolId: String, isFavorite: Boolean) {
+        val eventName = if (isFavorite) "favorite_added" else "favorite_removed"
+        analytics.trackEvent(eventName, mapOf("pool_id" to poolId))
     }
 }
 

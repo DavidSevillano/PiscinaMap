@@ -2,6 +2,7 @@ package com.burixer85.piscinamap.features.explore.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.FilterState
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.features.explore.domain.usecases.GetExploreNearbyPoolsUseCase
@@ -23,7 +24,8 @@ import kotlin.math.sqrt
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
-    private val getExploreNearbyPoolsUseCase: GetExploreNearbyPoolsUseCase
+    private val getExploreNearbyPoolsUseCase: GetExploreNearbyPoolsUseCase,
+    private val analytics: AnalyticsManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExploreUiState(isLoading = true))
@@ -48,6 +50,12 @@ class ExploreViewModel @Inject constructor(
         currentLat = lat
         currentLng = lng
 
+        analytics.trackScreen("ExploreScreen")
+        analytics.trackEvent(
+            "map_area_searched",
+            mapOf("latitude" to lat.toString(), "longitude" to lng.toString())
+        )
+
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
@@ -62,6 +70,7 @@ class ExploreViewModel @Inject constructor(
                     _uiState.update { it.copy(pools = pools, isLoading = false, error = null) }
                 },
                 onFailure = { error ->
+                    analytics.logNonFatalError(error)
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
                 }
             )
@@ -89,6 +98,7 @@ class ExploreViewModel @Inject constructor(
                     }
                 },
                 onFailure = { error ->
+                    analytics.logNonFatalError(error)
                     _uiState.update { it.copy(isLoadingMore = false, error = error.message) }
                 }
             )

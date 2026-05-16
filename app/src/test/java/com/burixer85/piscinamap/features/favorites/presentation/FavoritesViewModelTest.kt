@@ -2,6 +2,7 @@ package com.burixer85.piscinamap.features.favorites.presentation
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.core.presentation.util.FavoritesManager
 import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
@@ -11,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -29,6 +31,7 @@ class FavoritesViewModelTest {
     private lateinit var context: Context
     private lateinit var prefs: SharedPreferences
     private lateinit var detailRepository: DetailRepository
+    private lateinit var analytics: AnalyticsManager
     private val backingSet = mutableSetOf<String>()
 
     private val fakePool = Pool(
@@ -69,6 +72,7 @@ class FavoritesViewModelTest {
         }
 
         detailRepository = mockk()
+        analytics = mockk(relaxed = true)
     }
 
     @After
@@ -79,7 +83,7 @@ class FavoritesViewModelTest {
 
     @Test
     fun `isEmpty is true when no favorites`() = runTest {
-        val vm = FavoritesViewModel(context, detailRepository)
+        val vm = FavoritesViewModel(context, detailRepository, analytics)
         advanceUntilIdle()
         assert(vm.uiState.value.isEmpty)
         assert(vm.uiState.value.pools.isEmpty())
@@ -90,7 +94,7 @@ class FavoritesViewModelTest {
         backingSet.add(fakePool.id)
         coEvery { detailRepository.getPoolDetails(fakePool.id) } returns Result.success(fakePool)
 
-        val vm = FavoritesViewModel(context, detailRepository)
+        val vm = FavoritesViewModel(context, detailRepository, analytics)
         advanceUntilIdle()
 
         assert(!vm.uiState.value.isEmpty)
@@ -103,7 +107,7 @@ class FavoritesViewModelTest {
         backingSet.add(fakePool.id)
         coEvery { detailRepository.getPoolDetails(fakePool.id) } returns Result.success(fakePool)
 
-        val vm = FavoritesViewModel(context, detailRepository)
+        val vm = FavoritesViewModel(context, detailRepository, analytics)
         advanceUntilIdle()
         assert(vm.uiState.value.pools.size == 1)
 
@@ -116,7 +120,7 @@ class FavoritesViewModelTest {
 
     @Test
     fun `updateFavoriteState adds pool when favorited externally`() = runTest {
-        val vm = FavoritesViewModel(context, detailRepository)
+        val vm = FavoritesViewModel(context, detailRepository, analytics)
         advanceUntilIdle()
         assert(vm.uiState.value.isEmpty)
 
@@ -126,5 +130,13 @@ class FavoritesViewModelTest {
 
         assert(!vm.uiState.value.isEmpty)
         assert(vm.uiState.value.pools.size == 1)
+    }
+
+    @Test
+    fun `init tracks FavoritesScreen`() = runTest {
+        val vm = FavoritesViewModel(context, detailRepository, analytics)
+        advanceUntilIdle()
+
+        verify { analytics.trackScreen("FavoritesScreen") }
     }
 }

@@ -1,10 +1,12 @@
 package com.burixer85.piscinamap.features.detail.presentation
 
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.Pool
 import com.burixer85.piscinamap.features.detail.domain.usecases.GetPoolDetailsUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -24,6 +26,7 @@ class DetailViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var useCase: GetPoolDetailsUseCase
+    private lateinit var analytics: AnalyticsManager
     private lateinit var viewModel: DetailViewModel
 
     private val fakePool = Pool(
@@ -40,7 +43,8 @@ class DetailViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         useCase = mockk()
-        viewModel = DetailViewModel(useCase)
+        analytics = mockk(relaxed = true)
+        viewModel = DetailViewModel(useCase, analytics)
     }
 
     @After
@@ -124,5 +128,58 @@ class DetailViewModelTest {
         val state = viewModel.uiState.value
         assertNull(state.error)
         assertEquals(fakePool, state.pool)
+    }
+
+    @Test
+    fun `loadPoolDetails tracks DetailScreen and pool_detail_viewed on success`() = runTest {
+        coEvery { useCase("pool1") } returns Result.success(fakePool)
+
+        viewModel.setPoolId("pool1")
+
+        verify { analytics.trackScreen("DetailScreen") }
+        verify {
+            analytics.trackEvent(
+                "pool_detail_viewed",
+                mapOf("pool_id" to "pool1", "pool_name" to "Piscina Test")
+            )
+        }
+    }
+
+    @Test
+    fun `loadPoolDetails logs non-fatal error on failure`() = runTest {
+        val exception = Exception("Network error")
+        coEvery { useCase("pool1") } returns Result.failure(exception)
+
+        viewModel.setPoolId("pool1")
+
+        verify { analytics.logNonFatalError(exception) }
+    }
+
+    @Test
+    fun `onFavoriteToggled tracks favorite_added when isFavorite is true`() {
+        viewModel.onFavoriteToggled("pool1", true)
+
+        verify { analytics.trackEvent("favorite_added", mapOf("pool_id" to "pool1")) }
+    }
+
+    @Test
+    fun `onFavoriteToggled tracks favorite_removed when isFavorite is false`() {
+        viewModel.onFavoriteToggled("pool1", false)
+
+        verify { analytics.trackEvent("favorite_removed", mapOf("pool_id" to "pool1")) }
+    }
+
+    @Test
+    fun `onPoolHidden tracks pool_hidden event`() {
+        viewModel.onPoolHidden("pool1")
+
+        verify { analytics.trackEvent("pool_hidden", mapOf("pool_id" to "pool1")) }
+    }
+
+    @Test
+    fun `onPoolUnhidden tracks pool_unhidden event`() {
+        viewModel.onPoolUnhidden("pool1")
+
+        verify { analytics.trackEvent("pool_unhidden", mapOf("pool_id" to "pool1")) }
     }
 }
