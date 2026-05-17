@@ -10,6 +10,9 @@ import com.burixer85.piscinamap.core.presentation.util.PoolStateManager
 import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,8 +55,10 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.update { FavoritesUiState(isEmpty = true, isLoading = false) }
                 return@launch
             }
-            val pools = ids.mapNotNull { id ->
-                detailRepository.getPoolDetails(id).getOrNull()?.copy(isFavorite = true)
+            val pools = coroutineScope {
+                ids.map { id -> async { detailRepository.getPoolDetails(id).getOrNull()?.copy(isFavorite = true) } }
+                    .awaitAll()
+                    .filterNotNull()
             }
             _uiState.update { current ->
                 current.copy(
