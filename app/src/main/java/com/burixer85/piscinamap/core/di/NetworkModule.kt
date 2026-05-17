@@ -1,8 +1,7 @@
 package com.burixer85.piscinamap.core.di
 
-import android.content.Context
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
-import com.burixer85.piscinamap.core.data.local.db.PoolCacheDao
+import com.burixer85.piscinamap.core.data.PoolSearchDataSource
 import com.burixer85.piscinamap.core.data.local.db.PoolDetailCacheDao
 import com.burixer85.piscinamap.features.detail.data.repository.DetailRepositoryImpl
 import com.burixer85.piscinamap.features.detail.domain.repository.DetailRepository
@@ -14,7 +13,6 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -44,9 +42,8 @@ object NetworkModule {
     @Singleton
     fun providePoolRepository(
         api: GooglePlacesApi,
-        @ApplicationContext context: Context,
-        poolCacheDao: PoolCacheDao
-    ): PoolRepository = PoolRepositoryImpl(api, context, poolCacheDao)
+        poolSearchDataSource: PoolSearchDataSource
+    ): PoolRepository = PoolRepositoryImpl(api, poolSearchDataSource)
 
     @Provides
     @Singleton
@@ -58,8 +55,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideExploreRepository(
-        api: GooglePlacesApi,
-        @ApplicationContext context: Context,
-        poolCacheDao: PoolCacheDao
-    ): ExploreRepository = ExploreRepositoryImpl(api, context, poolCacheDao)
+        poolSearchDataSource: PoolSearchDataSource
+    ): ExploreRepository = ExploreRepositoryImpl(poolSearchDataSource)
 }
