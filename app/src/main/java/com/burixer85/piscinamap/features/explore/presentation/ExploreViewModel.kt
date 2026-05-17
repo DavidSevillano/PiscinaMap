@@ -57,14 +57,7 @@ class ExploreViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null,
-                    warning = null,
-                    hasSearchedMore = false
-                )
-            }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             getExploreNearbyPoolsUseCase(lat, lng, 50000).fold(
                 onSuccess = { pools ->
                     _uiState.update { it.copy(pools = pools, isLoading = false, error = null) }
@@ -72,34 +65,6 @@ class ExploreViewModel @Inject constructor(
                 onFailure = { error ->
                     analytics.logNonFatalError(error)
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
-                }
-            )
-        }
-    }
-
-    fun fetchMorePools() {
-        if (_uiState.value.isLoadingMore || _uiState.value.hasSearchedMore) return
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingMore = true, error = null, hasSearchedMore = true) }
-            getExploreNearbyPoolsUseCase(currentLat, currentLng, 50000).fold(
-                onSuccess = { newPools ->
-                    val existingIds = _uiState.value.pools.map { it.id }.toSet()
-                    val uniqueNewPools = newPools.filter { it.id !in existingIds }
-
-                    _uiState.update {
-                        it.copy(
-                            pools = it.pools + uniqueNewPools,
-                            isLoadingMore = false,
-                            warning = if (uniqueNewPools.isEmpty()) {
-                                "No se encontraron más piscinas en esta área."
-                            } else null
-                        )
-                    }
-                },
-                onFailure = { error ->
-                    analytics.logNonFatalError(error)
-                    _uiState.update { it.copy(isLoadingMore = false, error = error.message) }
                 }
             )
         }
@@ -133,11 +98,8 @@ class ExploreViewModel @Inject constructor(
 
 data class ExploreUiState(
     val isLoading: Boolean = false,
-    val isLoadingMore: Boolean = false,
     val pools: List<Pool> = emptyList(),
     val error: String? = null,
-    val warning: String? = null,
-    val hasSearchedMore: Boolean = false,
     val filters: FilterState = FilterState(),
     val userLatLng: Pair<Double, Double>? = null
 )

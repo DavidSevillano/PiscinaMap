@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -132,7 +131,6 @@ fun ExploreScreen(
         uiState = uiState,
         filteredPools = filteredPools,
         onFiltersChange = viewModel::updateFilter,
-        onFetchMore = viewModel::fetchMorePools,
         onNavigateToDetail = onNavigateToDetail,
         nativeAdList = nativeAdList,
         showExitConfirmation = showExitConfirmation,
@@ -150,7 +148,6 @@ internal fun ExploreContent(
     uiState: ExploreUiState,
     filteredPools: List<Pool>,
     onFiltersChange: (FilterState) -> Unit,
-    onFetchMore: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
     nativeAdList: List<NativeAd> = emptyList(),
     showExitConfirmation: Boolean = false,
@@ -301,33 +298,6 @@ internal fun ExploreContent(
                                 }
                             }
 
-                            item {
-                                if (!uiState.hasSearchedMore) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 4.dp, bottom = 16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (uiState.isLoadingMore) {
-                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                        } else {
-                                            Button(onClick = onFetchMore) {
-                                                Text(stringResource(R.string.search_more))
-                                            }
-                                        }
-                                    }
-                                } else if (uiState.warning != null) {
-                                    Text(
-                                        text = uiState.warning!!,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 16.dp),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
                         }
                     }
                 }

@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import com.burixer85.piscinamap.R
 import com.burixer85.piscinamap.features.explore.presentation.ExploreContent
@@ -26,7 +25,6 @@ class ExploreContentTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(isLoading = true),
-                    onFetchMore = {},
                     onNavigateToDetail = {},
                 )
             }
@@ -40,7 +38,6 @@ class ExploreContentTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(pools = TestData.poolList),
-                    onFetchMore = {},
                     onNavigateToDetail = {},
                 )
             }
@@ -55,7 +52,6 @@ class ExploreContentTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(error = "Network error"),
-                    onFetchMore = {},
                     onNavigateToDetail = {},
                 )
             }
@@ -69,7 +65,6 @@ class ExploreContentTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(pools = emptyList()),
-                    onFetchMore = {},
                     onNavigateToDetail = {},
                 )
             }
@@ -83,7 +78,6 @@ class ExploreContentTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(),
-                    onFetchMore = {},
                     onNavigateToDetail = {},
                     showExitConfirmation = true,
                     onConfirmExit = {},
@@ -93,35 +87,5 @@ class ExploreContentTest {
         }
         rule.onNodeWithText(ctx.getString(R.string.exit_app_title)).assertIsDisplayed()
         rule.onNodeWithText(ctx.getString(R.string.exit_app_message)).assertIsDisplayed()
-    }
-
-    @Test
-    fun showsSearchMoreButton_whenPoolsLoadedAndNotSearchedMore() {
-        rule.setContent {
-            PiscinaMapTheme {
-                ExploreContent(
-                    uiState = ExploreUiState(pools = TestData.poolList, hasSearchedMore = false),
-                    onFetchMore = {},
-                    onNavigateToDetail = {},
-                )
-            }
-        }
-        rule.onNodeWithText(ctx.getString(R.string.search_more)).assertIsDisplayed()
-    }
-
-    @Test
-    fun invokesOnFetchMore_whenSearchMoreClicked() {
-        var fetchMoreCalled = false
-        rule.setContent {
-            PiscinaMapTheme {
-                ExploreContent(
-                    uiState = ExploreUiState(pools = TestData.poolList, hasSearchedMore = false),
-                    onFetchMore = { fetchMoreCalled = true },
-                    onNavigateToDetail = {},
-                )
-            }
-        }
-        rule.onNodeWithText(ctx.getString(R.string.search_more)).performClick()
-        assert(fetchMoreCalled)
     }
 }

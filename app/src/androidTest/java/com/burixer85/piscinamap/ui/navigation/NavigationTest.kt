@@ -21,7 +21,6 @@ class NavigationTest {
             PiscinaMapTheme {
                 ExploreContent(
                     uiState = ExploreUiState(pools = TestData.poolList),
-                    onFetchMore = {},
                     onNavigateToDetail = { navigatedToId = it },
                 )
             }
