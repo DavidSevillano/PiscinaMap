@@ -189,7 +189,7 @@ fun fetchPools(
             mapOf("query" to prediction.getPrimaryText(null).toString())
         )
 
-        val placesClient = Places.createClient(context.applicationContext)
+        val placesClient = Places.createClient(context)
         val placeFields = listOf(Place.Field.NAME, Place.Field.LAT_LNG)
         val request = FetchPlaceRequest.builder(prediction.placeId, placeFields).build()
 
@@ -267,13 +267,8 @@ fun fetchPools(
 
         if (sessionToken == null) sessionToken = AutocompleteSessionToken.newInstance()
 
-        val applicationContext = context.applicationContext
-        if (applicationContext == null) {
-            return
-        }
-
         try {
-            val placesClient = Places.createClient(applicationContext)
+            val placesClient = Places.createClient(context)
             val request = FindAutocompletePredictionsRequest.builder()
                 .setSessionToken(sessionToken)
                 .setQuery(newText)

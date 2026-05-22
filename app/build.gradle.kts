@@ -37,8 +37,8 @@ android {
         applicationId = "com.burixer85.piscinamap"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.4"
+        versionCode = 9
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "com.burixer85.piscinamap.HiltTestRunner"
 
@@ -89,8 +89,18 @@ android {
                 "TEST_DEVICE_ID",
                 "\"${localProperties.getProperty("admob.test.device.id")}\""
             )
+            buildConfigField(
+                "String",
+                "SIGNING_CERT_SHA1",
+                "\"${localProperties.getProperty("debug.cert.sha1") ?: ""}\""
+            )
         }
         release {
+            buildConfigField(
+                "String",
+                "SIGNING_CERT_SHA1",
+                "\"${localProperties.getProperty("release.cert.sha1") ?: ""}\""
+            )
             // 2. Asignar la firma a la variante de release
             signingConfig = signingConfigs.getByName("release")
 

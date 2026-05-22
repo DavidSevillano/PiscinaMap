@@ -1,5 +1,6 @@
 package com.burixer85.piscinamap.core.di
 
+import com.burixer85.piscinamap.BuildConfig
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
 import com.burixer85.piscinamap.core.data.PoolSearchDataSource
 import com.burixer85.piscinamap.core.data.local.db.PoolDetailCacheDao
@@ -16,6 +17,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -31,8 +33,18 @@ object NetworkModule {
             coerceInputValues = true
             isLenient = true
         }
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("X-Android-Package", BuildConfig.APPLICATION_ID)
+                    .addHeader("X-Android-Cert", BuildConfig.SIGNING_CERT_SHA1)
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
         return Retrofit.Builder()
             .baseUrl("https://maps.googleapis.com/")
+            .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create(GooglePlacesApi::class.java)
