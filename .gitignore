@@ -15,3 +15,7 @@ local.properties
 agents.md
 CLAUDE.md
 google-services.json
+docs/superpowers/
+.agents/
+.claude/
+.claire/
