@@ -10,7 +10,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.burixer85.piscinamap.core.domain.model.FilterState
-import com.burixer85.piscinamap.core.domain.model.PoolType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -68,28 +67,6 @@ class FilterChipsRowTest {
             FilterChipsRow(filters = FilterState(maxDistanceKm = 10), onFiltersChange = {})
         }
         composeRule.onNodeWithText("< 10km").assertIsDisplayed()
-    }
-
-    @Test
-    fun chipTipo_opensDropdown() {
-        composeRule.setContent {
-            FilterChipsRow(filters = FilterState(), onFiltersChange = {})
-        }
-        composeRule.onNodeWithText("Tipo").performClick()
-        composeRule.onNodeWithText("Pública").assertIsDisplayed()
-        composeRule.onNodeWithText("Municipal").assertIsDisplayed()
-        composeRule.onNodeWithText("Hotel").assertIsDisplayed()
-    }
-
-    @Test
-    fun chipTipo_selectingHotel_emitsCorrectState() {
-        var emitted = FilterState()
-        composeRule.setContent {
-            FilterChipsRow(filters = FilterState(), onFiltersChange = { emitted = it })
-        }
-        composeRule.onNodeWithText("Tipo").performClick()
-        composeRule.onNodeWithText("Hotel").performClick()
-        assertTrue(PoolType.HOTEL in emitted.selectedTypes)
     }
 
     @Test
@@ -155,27 +132,5 @@ class FilterChipsRowTest {
         // 25 -> null
         composeRule.onNodeWithText("< 25km").performClick()
         assertNull(states.last().maxDistanceKm)
-    }
-
-    @Test
-    fun chipTipo_multipleSelections_storesBothTypes() {
-        var emitted = FilterState()
-        composeRule.setContent {
-            var currentFilters by remember { mutableStateOf(FilterState()) }
-            FilterChipsRow(
-                filters = currentFilters,
-                onFiltersChange = {
-                    currentFilters = it
-                    emitted = it
-                }
-            )
-        }
-        // Select Hotel
-        composeRule.onNodeWithText("Tipo").performClick()
-        composeRule.onNodeWithText("Hotel").performClick()
-        // Select Municipal (dropdown should still be open)
-        composeRule.onNodeWithText("Municipal").performClick()
-        assertTrue(PoolType.HOTEL in emitted.selectedTypes)
-        assertTrue(PoolType.MUNICIPAL in emitted.selectedTypes)
     }
 }

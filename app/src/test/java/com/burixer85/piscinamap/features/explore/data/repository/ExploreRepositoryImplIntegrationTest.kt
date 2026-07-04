@@ -3,6 +3,7 @@ package com.burixer85.piscinamap.features.explore.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.burixer85.piscinamap.core.data.GooglePlacesApi
+import com.burixer85.piscinamap.core.data.PoolSearchDataSource
 import com.burixer85.piscinamap.core.data.local.db.PoolCacheDao
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.burixer85.piscinamap.core.data.local.entity.PoolCacheEntity
@@ -53,7 +54,8 @@ class ExploreRepositoryImplIntegrationTest {
             .build()
             .create(GooglePlacesApi::class.java)
 
-        repository = ExploreRepositoryImpl(api, mockContext, mockPoolCacheDao)
+        val dataSource = PoolSearchDataSource(api, mockContext, mockPoolCacheDao)
+        repository = ExploreRepositoryImpl(dataSource)
     }
 
     @After

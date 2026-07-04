@@ -82,8 +82,7 @@ class ExploreViewModel @Inject constructor(
                 haversineKm(uLat, uLng, pool.latitude, pool.longitude) <= maxKm
             } ?: true
         } ?: true
-        val typeOk = filters.selectedTypes.isEmpty() || pool.poolType in filters.selectedTypes
-        ratingOk && openOk && distanceOk && typeOk
+        ratingOk && openOk && distanceOk
     }
 
     internal fun haversineKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {

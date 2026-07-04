@@ -1,8 +1,8 @@
 package com.burixer85.piscinamap.features.explore.presentation
 
+import com.burixer85.piscinamap.core.analytics.AnalyticsManager
 import com.burixer85.piscinamap.core.domain.model.FilterState
 import com.burixer85.piscinamap.core.domain.model.Pool
-import com.burixer85.piscinamap.core.domain.model.PoolType
 import com.burixer85.piscinamap.features.explore.domain.usecases.GetExploreNearbyPoolsUseCase
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +20,7 @@ import org.junit.Test
 class ExploreViewModelFilterTest {
 
     private val mockUseCase = mockk<GetExploreNearbyPoolsUseCase>(relaxed = true)
+    private val mockAnalytics = mockk<AnalyticsManager>(relaxed = true)
     private lateinit var viewModel: ExploreViewModel
 
     private fun makePool(
@@ -27,8 +28,7 @@ class ExploreViewModelFilterTest {
         rating: Float? = null,
         isOpenNow: Boolean? = null,
         lat: Double = 40.4168,
-        lng: Double = -3.7038,
-        poolType: PoolType = PoolType.UNKNOWN
+        lng: Double = -3.7038
     ) = Pool(
         id = id,
         name = "Pool $id",
@@ -36,14 +36,13 @@ class ExploreViewModelFilterTest {
         longitude = lng,
         address = "",
         rating = rating,
-        isOpenNow = isOpenNow,
-        poolType = poolType
+        isOpenNow = isOpenNow
     )
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = ExploreViewModel(mockUseCase)
+        viewModel = ExploreViewModel(mockUseCase, mockAnalytics)
     }
 
     @After
@@ -109,48 +108,11 @@ class ExploreViewModelFilterTest {
     }
 
     @Test
-    fun `applyFilters filters by single type`() {
-        val pools = listOf(
-            makePool("1", poolType = PoolType.HOTEL),
-            makePool("2", poolType = PoolType.PUBLIC),
-            makePool("3", poolType = PoolType.MUNICIPAL)
-        )
-        val result = viewModel.applyFilters(
-            pools,
-            FilterState(selectedTypes = setOf(PoolType.HOTEL)),
-            null
-        )
-        assertEquals(listOf(pools[0]), result)
-    }
-
-    @Test
-    fun `applyFilters filters by multiple types`() {
-        val pools = listOf(
-            makePool("1", poolType = PoolType.HOTEL),
-            makePool("2", poolType = PoolType.PUBLIC),
-            makePool("3", poolType = PoolType.MUNICIPAL)
-        )
-        val result = viewModel.applyFilters(
-            pools,
-            FilterState(selectedTypes = setOf(PoolType.HOTEL, PoolType.PUBLIC)),
-            null
-        )
-        assertEquals(listOf(pools[0], pools[1]), result)
-    }
-
-    @Test
-    fun `applyFilters empty selectedTypes does not filter by type`() {
-        val pools = listOf(makePool("1", poolType = PoolType.HOTEL), makePool("2", poolType = PoolType.UNKNOWN))
-        val result = viewModel.applyFilters(pools, FilterState(selectedTypes = emptySet()), null)
-        assertEquals(pools, result)
-    }
-
-    @Test
     fun `applyFilters combines multiple active filters`() {
         val pools = listOf(
-            makePool("1", rating = 4.5f, isOpenNow = true, poolType = PoolType.HOTEL),
-            makePool("2", rating = 4.5f, isOpenNow = false, poolType = PoolType.HOTEL),
-            makePool("3", rating = 3.0f, isOpenNow = true, poolType = PoolType.HOTEL)
+            makePool("1", rating = 4.5f, isOpenNow = true),
+            makePool("2", rating = 4.5f, isOpenNow = false),
+            makePool("3", rating = 3.0f, isOpenNow = true)
         )
         val result = viewModel.applyFilters(
             pools,
