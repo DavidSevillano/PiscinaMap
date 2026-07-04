@@ -95,6 +95,7 @@ fun ExploreScreen(
     }
 
     LaunchedEffect(uiState.pools, locationPermissionDecided) {
+        if (BuildConfig.DISABLE_ADS) return@LaunchedEffect
         if (uiState.pools.isEmpty()) return@LaunchedEffect
         if (nativeAdList.isNotEmpty()) return@LaunchedEffect
         if (!locationPermissionDecided) return@LaunchedEffect
@@ -271,7 +272,7 @@ internal fun ExploreContent(
                                     totalPools++
 
                                     val adPosition = 2 + (totalPoolsAdShown * 4)
-                                    if (totalPools == adPosition && totalPools >= 2) {
+                                    if (!BuildConfig.DISABLE_ADS && totalPools == adPosition && totalPools >= 2) {
                                         add(totalPoolsAdShown)
                                         totalPoolsAdShown++
                                     }

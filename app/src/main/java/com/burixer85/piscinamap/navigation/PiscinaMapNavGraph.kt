@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -34,10 +35,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
+import com.burixer85.piscinamap.MainActivity
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.burixer85.piscinamap.R
@@ -105,6 +108,10 @@ fun PiscinaMapNavGraph(
                         key = "detail_vm_${key.poolId}_$navCounter"
                     )
                     detailViewModel.setPoolId(key.poolId)
+                    val context = LocalContext.current
+                    LaunchedEffect(Unit) {
+                        (context as? MainActivity)?.onPoolDetailOpened()
+                    }
                     DetailScreen(
                         poolId = key.poolId,
                         viewModel = detailViewModel,

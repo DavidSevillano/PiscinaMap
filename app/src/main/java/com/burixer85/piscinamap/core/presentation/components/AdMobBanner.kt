@@ -23,6 +23,8 @@ import com.google.android.gms.ads.admanager.AdManagerAdView
 fun AdMobBanner(
     modifier: Modifier = Modifier
 ) {
+    if (BuildConfig.DISABLE_ADS) return
+
     var adViewRef by remember { mutableStateOf<AdManagerAdView?>(null) }
 
     DisposableEffect(Unit) {

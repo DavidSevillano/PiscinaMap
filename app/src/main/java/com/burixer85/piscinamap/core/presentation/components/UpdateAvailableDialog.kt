@@ -34,8 +34,7 @@ import com.burixer85.piscinamap.R
 @Composable
 fun UpdateAvailableDialog(
     onUpdate: () -> Unit,
-    onDismiss: () -> Unit,
-    versionName: String
+    onDismiss: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
 
@@ -88,7 +87,7 @@ fun UpdateAvailableDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = stringResource(R.string.update_available_message, versionName),
+                    text = stringResource(R.string.update_available_message),
                     fontSize = 14.sp,
                     color = cs.onSurfaceVariant,
                     lineHeight = 20.sp

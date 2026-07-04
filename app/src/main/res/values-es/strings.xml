@@ -92,7 +92,7 @@
 
     <!-- ========== UPDATE AVAILABLE DIALOG ========== -->
     <string name="update_available_title">Actualización disponible</string>
-    <string name="update_available_message">La versión %1$s está disponible. ¡Actualiza ahora para nuevas funciones y correcciones!</string>
+    <string name="update_available_message">Hay una nueva versión disponible. ¡Actualiza ahora para nuevas funciones y correcciones!</string>
     <string name="update">Actualizar</string>
     <string name="not_now">Ahora no</string>
 </resources>

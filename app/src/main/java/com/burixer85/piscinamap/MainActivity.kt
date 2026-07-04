@@ -3,57 +3,57 @@ package com.burixer85.piscinamap
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.burixer85.piscinamap.navigation.PiscinaMapNavGraph
 import com.burixer85.piscinamap.core.presentation.components.UpdateAvailableDialog
+import com.burixer85.piscinamap.navigation.PiscinaMapNavGraph
 import com.burixer85.piscinamap.ui.theme.PiscinaMapTheme
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val adIntervalMs = 3 * 60 * 1000L // 3 minutos
-    private var adShown = false
+    private val adIntervalMs = 3 * 60 * 1000L
+    private var lastAdShownAt = 0L
 
     private var showUpdateDialog by mutableStateOf(false)
-    private val latestAppVersion = "1.0.2" // Change to higher version to show update dialog
-    private val showUpdateCheckEnabled = false // Set to true to enable update check
 
-    private val showAdRunnable = object : Runnable {
-        override fun run() {
-            loadAndShowAd()
-            handler.postDelayed(this, adIntervalMs)
+    private fun checkForUpdate() {
+        val appUpdateManager = AppUpdateManagerFactory.create(this)
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                showUpdateDialog = true
+            }
         }
     }
 
     private fun openPlayStore() {
-        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.burixer85.piscinamap"))
-        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.burixer85.piscinamap"))
+        val marketIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.burixer85.piscinamap"))
+        val webIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://play.google.com/store/apps/details?id=com.burixer85.piscinamap")
+        )
         try {
             startActivity(marketIntent)
         } catch (e: Exception) {
@@ -83,11 +83,13 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.getInsetsController(window, window.decorView).let { ctrl ->
             ctrl.hide(WindowInsetsCompat.Type.systemBars())
-            ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            ctrl.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
+        checkForUpdate()
+
         setContent {
-            val currentVersion = BuildConfig.VERSION_NAME
             PiscinaMapTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -95,14 +97,13 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Box {
                         PiscinaMapNavGraph()
-                        if ((showUpdateDialog || (showUpdateCheckEnabled && currentVersion != latestAppVersion))) {
+                        if (showUpdateDialog) {
                             UpdateAvailableDialog(
                                 onUpdate = {
                                     showUpdateDialog = false
                                     openPlayStore()
                                 },
-                                onDismiss = { showUpdateDialog = false },
-                                versionName = latestAppVersion
+                                onDismiss = { showUpdateDialog = false }
                             )
                         }
                     }
@@ -111,22 +112,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        if (!adShown) {
-            handler.postDelayed(showAdRunnable, 10000)
-            adShown = true
+    fun onPoolDetailOpened() {
+        if (BuildConfig.DISABLE_ADS) return
+        val now = System.currentTimeMillis()
+        if (lastAdShownAt == 0L || now - lastAdShownAt >= adIntervalMs) {
+            lastAdShownAt = now
+            loadAndShowAd()
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        handler.removeCallbacks(showAdRunnable)
-    }
-
     private fun loadAndShowAd() {
-        val interstitialId = if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/5224354917" else BuildConfig.ADMOB_INTERSTITIAL_ID
+        val interstitialId =
+            if (BuildConfig.USE_TEST_ADS) "ca-app-pub-3940256099942544/5224354917" else BuildConfig.ADMOB_INTERSTITIAL_ID
         InterstitialAd.load(
             this,
             interstitialId,

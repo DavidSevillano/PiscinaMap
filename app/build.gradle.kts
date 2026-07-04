@@ -76,6 +76,11 @@ android {
             "USE_TEST_ADS",
             "false"
         )
+        buildConfigField(
+            "Boolean",
+            "DISABLE_ADS",
+            "false"
+        )
 
         manifestPlaceholders["googlemapsKey"] = "${localProperties.getProperty("googlemaps.key")}"
         manifestPlaceholders["admobAppId"] = "${localProperties.getProperty("admob.app.id")}"
@@ -160,6 +165,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.play.services.ads)
+    implementation(libs.play.app.update.ktx)
 
     // Google Maps
     implementation(libs.google.maps.android.maps.compose)
